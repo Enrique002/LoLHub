@@ -2,7 +2,7 @@
 
 Sistema de diseño completo para mantener coherencia visual
 
----
+--
 
 ## 1. Identidad de Marca
 
