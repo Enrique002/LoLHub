@@ -15,8 +15,9 @@ import {
   IconButton,
   useColorModeValue,
   useToast,
+  Icon,
 } from '@chakra-ui/react';
-import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
+import { Eye, EyeOff } from 'lucide-react';
 import { Link as RouterLink } from 'react-router-dom';
 import { Link } from '@chakra-ui/react';
 import { useAuth } from '../contexts/AuthContext';
@@ -111,7 +112,7 @@ const LoginForm: React.FC = () => {
                 <InputRightElement>
                   <IconButton
                     aria-label={mostrarContrasenya ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    icon={mostrarContrasenya ? <ViewOffIcon /> : <ViewIcon />}
+                    icon={<Icon as={mostrarContrasenya ? EyeOff : Eye} />}
                     variant="ghost"
                     onClick={() => setMostrarContrasenya(!mostrarContrasenya)}
                   />

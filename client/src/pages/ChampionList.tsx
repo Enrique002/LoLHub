@@ -15,8 +15,10 @@ import {
   Heading,
   Container,
   Divider,
+  Icon,
 } from '@chakra-ui/react'
-import { SearchIcon, StarIcon } from '@chakra-ui/icons'
+import { Search, Star } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import { DATA_DRAGON_BASE } from '../config'
 import ChampionCard from '../components/ChampionCard'
@@ -38,12 +40,22 @@ type RoleFilter = 'Fighter' | 'Tank' | 'Mage' | 'Assassin' | 'Marksman' | 'Suppo
 
 const ChampionList: React.FC = () => {
   const { isAuthenticated } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [champions, setChampions] = useState<Champion[]>([])
   const [favoriteChampions, setFavoriteChampions] = useState<Champion[]>([])
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedRole, setSelectedRole] = useState<RoleFilter>('All')
+  const roleFromUrl = searchParams.get('role') as RoleFilter | null
+  const [selectedRole, setSelectedRole] = useState<RoleFilter>(roleFromUrl && ['Fighter', 'Tank', 'Mage', 'Assassin', 'Marksman', 'Support'].includes(roleFromUrl) ? roleFromUrl : 'All')
   const [loading, setLoading] = useState(true)
   const [loadingFavorites, setLoadingFavorites] = useState(false)
+
+  // Sincronizar el rol de la URL con el estado
+  useEffect(() => {
+    const roleFromUrl = searchParams.get('role') as RoleFilter | null
+    if (roleFromUrl && ['Fighter', 'Tank', 'Mage', 'Assassin', 'Marksman', 'Support'].includes(roleFromUrl)) {
+      setSelectedRole(roleFromUrl)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     const fetchChampions = async () => {
@@ -140,7 +152,7 @@ const ChampionList: React.FC = () => {
         {isAuthenticated && favoriteChampions.length > 0 && (
           <Box mb={8}>
             <HStack spacing={2} mb={4}>
-              <StarIcon color="yellow.400" boxSize={5} />
+              <Icon as={Star} color="yellow.400" boxSize={5} fill="yellow.400" />
               <Heading size="lg" color={useColorModeValue('gray.800', 'white')}>
                 Mis Favoritos
               </Heading>
@@ -166,7 +178,7 @@ const ChampionList: React.FC = () => {
         <VStack spacing={4} align="stretch">
           <InputGroup size="lg">
             <InputLeftElement pointerEvents="none">
-              <SearchIcon color="gray.400" />
+              <Icon as={Search} color="gray.400" />
             </InputLeftElement>
             <Input
               placeholder="Buscar campeones por nombre o título..."
@@ -193,7 +205,15 @@ const ChampionList: React.FC = () => {
                     size="sm"
                     variant={selectedRole === role ? 'solid' : 'outline'}
                     colorScheme={selectedRole === role ? 'blue' : 'gray'}
-                    onClick={() => setSelectedRole(role)}
+                    onClick={() => {
+                      setSelectedRole(role)
+                      if (role === 'All') {
+                        searchParams.delete('role')
+                      } else {
+                        searchParams.set('role', role)
+                      }
+                      setSearchParams(searchParams)
+                    }}
                     _hover={{
                       transform: 'translateY(-2px)',
                       boxShadow: 'md',

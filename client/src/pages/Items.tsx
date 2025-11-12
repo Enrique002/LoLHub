@@ -24,8 +24,9 @@ import {
   Container,
   Heading,
   Tooltip,
+  Icon,
 } from '@chakra-ui/react'
-import { SearchIcon } from '@chakra-ui/icons'
+import { Search } from 'lucide-react'
 import axios from 'axios'
 import { DATA_DRAGON_BASE } from '../config'
 
@@ -210,7 +211,7 @@ const Items: React.FC = () => {
       <HStack align="start" spacing={4} flexWrap="wrap">
         <InputGroup maxW={{ base: 'full', md: 'md' }}>
           <InputLeftElement pointerEvents="none">
-            <SearchIcon color="gray.400" />
+            <Icon as={Search} color="gray.400" />
           </InputLeftElement>
           <Input
             placeholder="Buscar items..."

@@ -22,10 +22,17 @@ import {
   TabPanel,
   Card,
   CardBody,
-  Tooltip,
   Divider,
+  Icon,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
 } from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
+import { Search } from 'lucide-react';
 import axios from 'axios';
 import { DATA_DRAGON_BASE } from '../config';
 import Loading from '../components/Loading';
@@ -98,6 +105,8 @@ const Runas: React.FC = () => {
   const [cargando, setCargando] = useState(true);
   const [terminoBusqueda, setTerminoBusqueda] = useState('');
   const [arbolSeleccionado, setArbolSeleccionado] = useState<string>('todos');
+  const [runaSeleccionada, setRunaSeleccionada] = useState<Runa | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const fondoCard = useColorModeValue('white', 'gray.800');
   const fondoHover = useColorModeValue('gray.50', 'gray.700');
@@ -188,7 +197,7 @@ const Runas: React.FC = () => {
         <VStack spacing={4} align="stretch">
           <InputGroup size="lg">
             <InputLeftElement pointerEvents="none">
-              <SearchIcon color="gray.400" />
+              <Icon as={Search} color="gray.400" />
             </InputLeftElement>
             <Input
               placeholder="Buscar runas por nombre o descripción..."
@@ -295,34 +304,24 @@ const Runas: React.FC = () => {
                       </Text>
                       <SimpleGrid columns={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing={4}>
                         {slot.runes.map((runa) => (
-                          <Tooltip
+                          <Card
                             key={runa.id}
-                            label={
-                              <VStack align="start" spacing={1} maxW="300px">
-                                <Text fontWeight="bold">{runa.name}</Text>
-                                <Text fontSize="xs" whiteSpace="pre-wrap">
-                                  {limpiarHTML(runa.longDesc)}
-                                </Text>
-                              </VStack>
-                            }
-                            placement="top"
-                            hasArrow
-                            bg={useColorModeValue('gray.800', 'gray.200')}
-                            color={useColorModeValue('white', 'gray.800')}
+                            bg={fondoCard}
+                            border="2px"
+                            borderColor={colorBorde}
+                            cursor="pointer"
+                            transition="all 0.2s"
+                            onClick={() => {
+                              setRunaSeleccionada(runa);
+                              onOpen();
+                            }}
+                            _hover={{
+                              transform: 'scale(1.05)',
+                              boxShadow: 'xl',
+                              borderColor: 'blue.400',
+                              bg: fondoHover,
+                            }}
                           >
-                            <Card
-                              bg={fondoCard}
-                              border="2px"
-                              borderColor={colorBorde}
-                              cursor="pointer"
-                              transition="all 0.2s"
-                              _hover={{
-                                transform: 'translateY(-4px)',
-                                boxShadow: 'xl',
-                                borderColor: 'blue.400',
-                                bg: fondoHover,
-                              }}
-                            >
                               <CardBody p={4}>
                                 <VStack spacing={2} align="center">
                                   <Image
@@ -357,7 +356,6 @@ const Runas: React.FC = () => {
                                 </VStack>
                               </CardBody>
                             </Card>
-                          </Tooltip>
                         ))}
                       </SimpleGrid>
                     </Box>
@@ -374,6 +372,77 @@ const Runas: React.FC = () => {
           </Box>
         )}
       </VStack>
+
+      {/* Modal de Detalles de Runa */}
+      <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
+        <ModalContent
+          bg={useColorModeValue('white', 'background.card')}
+          borderRadius="lg"
+          maxW="600px"
+        >
+          <ModalHeader
+            fontSize="2xl"
+            fontWeight="bold"
+            color={useColorModeValue('gray.800', 'foreground.primary')}
+          >
+            {runaSeleccionada?.name}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            {runaSeleccionada && (
+              <VStack spacing={6} align="stretch">
+                <HStack spacing={4} align="center">
+                  <Image
+                    src={runaSeleccionada.icon.startsWith('http') ? runaSeleccionada.icon : `https://ddragon.leagueoflegends.com/cdn/img/${runaSeleccionada.icon}`}
+                    alt={runaSeleccionada.name}
+                    boxSize="80px"
+                    borderRadius="md"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      if (!target.src.includes('ddragon.leagueoflegends.com/cdn/img/')) {
+                        target.src = `https://ddragon.leagueoflegends.com/cdn/img/${runaSeleccionada.icon}`;
+                      }
+                    }}
+                  />
+                  <VStack align="start" spacing={2} flex={1}>
+                    <Text
+                      fontSize="lg"
+                      fontWeight="semibold"
+                      color={useColorModeValue('gray.800', 'foreground.primary')}
+                    >
+                      {runaSeleccionada.name}
+                    </Text>
+                    <Text
+                      fontSize="sm"
+                      color={useColorModeValue('gray.600', 'foreground.muted')}
+                      lineHeight="relaxed"
+                    >
+                      {limpiarHTML(runaSeleccionada.shortDesc)}
+                    </Text>
+                  </VStack>
+                </HStack>
+
+                <Divider borderColor={useColorModeValue('gray.200', 'background.muted')} />
+
+                <Box>
+                  <Heading size="sm" mb={3} color={useColorModeValue('gray.700', 'foreground.primary')}>
+                    Descripción Completa
+                  </Heading>
+                  <Text
+                    fontSize="sm"
+                    color={useColorModeValue('gray.700', 'foreground.primary')}
+                    lineHeight="relaxed"
+                    whiteSpace="pre-wrap"
+                  >
+                    {limpiarHTML(runaSeleccionada.longDesc)}
+                  </Text>
+                </Box>
+              </VStack>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Container>
   );
 };

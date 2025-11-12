@@ -15,8 +15,9 @@ import {
   InputRightElement,
   IconButton,
   useColorModeValue,
+  Icon,
 } from '@chakra-ui/react';
-import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { validarFormularioRegistro } from '../utilidades/validacion';
 
@@ -129,7 +130,7 @@ const RegisterForm: React.FC = () => {
                 <InputRightElement>
                   <IconButton
                     aria-label={mostrarContrasenya ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    icon={mostrarContrasenya ? <ViewOffIcon /> : <ViewIcon />}
+                    icon={<Icon as={mostrarContrasenya ? EyeOff : Eye} />}
                     variant="ghost"
                     onClick={() => setMostrarContrasenya(!mostrarContrasenya)}
                   />
@@ -149,7 +150,7 @@ const RegisterForm: React.FC = () => {
                 <InputRightElement>
                   <IconButton
                     aria-label={mostrarConfirmacion ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    icon={mostrarConfirmacion ? <ViewOffIcon /> : <ViewIcon />}
+                    icon={<Icon as={mostrarConfirmacion ? EyeOff : Eye} />}
                     variant="ghost"
                     onClick={() => setMostrarConfirmacion(!mostrarConfirmacion)}
                   />

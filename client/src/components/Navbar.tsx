@@ -16,8 +16,9 @@ import {
   MenuItem,
   Text,
   Avatar,
+  Icon,
 } from '@chakra-ui/react'
-import { MoonIcon, SunIcon, ChevronDownIcon, AtSignIcon } from '@chakra-ui/icons'
+import { Moon, Sun, ChevronDown, AtSign } from 'lucide-react'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -157,7 +158,7 @@ const Navbar: React.FC = () => {
           <IconButton
             aria-label="Toggle color mode"
             onClick={toggleColorMode}
-            icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+            icon={<Icon as={colorMode === 'light' ? Moon : Sun} />}
             variant="ghost"
             color={textColor}
             _hover={{ color: hoverTextColor, bg: buttonHoverBg }}
@@ -167,7 +168,7 @@ const Navbar: React.FC = () => {
             <Menu>
               <MenuButton
                 as={Button}
-                rightIcon={<ChevronDownIcon />}
+                rightIcon={<Icon as={ChevronDown} />}
                 variant="ghost"
                 size="sm"
                 color={textColor}
@@ -206,7 +207,7 @@ const Navbar: React.FC = () => {
                 to="/register"
                 variant="default"
                 size="sm"
-                leftIcon={<AtSignIcon />}
+                leftIcon={<Icon as={AtSign} />}
                 _hover={{ transform: 'scale(1.05)' }}
                 transition="all 0.2s"
               >

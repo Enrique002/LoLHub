@@ -12,35 +12,8 @@ import {
   Icon,
 } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router-dom'
-import { SearchIcon, ArrowForwardIcon } from '@chakra-ui/icons'
+import { Shield, Users, Trophy, ArrowRight, Wand2, Target, Heart, Star, MessageCircle, Sword, Axe, HeartHandshake } from 'lucide-react'
 import heroBanner from '../assets/hero-banner.jpg'
-
-// Iconos SVG personalizados
-const ShieldIcon = ({ color, size = 32 }: { color: string; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-  </svg>
-)
-
-const UsersIcon = ({ color, size = 32 }: { color: string; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-  </svg>
-)
-
-const TrophyIcon = ({ color, size = 32 }: { color: string; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-    <path d="M4 22h16" />
-    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-  </svg>
-)
 
 const Home: React.FC = () => {
   const cardBg = useColorModeValue('white', 'background.card')
@@ -121,7 +94,7 @@ const Home: React.FC = () => {
                 to="/champions"
                 size="lg"
                 variant="default"
-                rightIcon={<ArrowForwardIcon />}
+                rightIcon={<Icon as={ArrowRight} />}
                 textTransform="uppercase"
                 letterSpacing="wide"
               >
@@ -162,7 +135,7 @@ const Home: React.FC = () => {
             >
               <VStack spacing={4} align="center" textAlign="center">
                 <Box>
-                  <ShieldIcon color="#F0B429" size={32} />
+                  <Icon as={Shield} color="#F0B429" boxSize={8} strokeWidth={2} />
                 </Box>
                 <Heading size="md" color="foreground.primary">
                   Perfiles Épicos
@@ -187,7 +160,7 @@ const Home: React.FC = () => {
             >
               <VStack spacing={4} align="center" textAlign="center">
                 <Box>
-                  <UsersIcon color="#36C5F0" size={32} />
+                  <Icon as={Users} color="#36C5F0" boxSize={8} strokeWidth={2} />
                 </Box>
                 <Heading size="md" color="foreground.primary">
                   Comunidad Activa
@@ -212,7 +185,7 @@ const Home: React.FC = () => {
             >
               <VStack spacing={4} align="center" textAlign="center">
                 <Box>
-                  <TrophyIcon color="#F0B429" size={32} />
+                  <Icon as={Trophy} color="#F0B429" boxSize={8} strokeWidth={2} />
                 </Box>
                 <Heading size="md" color="foreground.primary">
                   Sistema de Puntos
@@ -248,10 +221,12 @@ const Home: React.FC = () => {
             </Text>
           </VStack>
 
-          {/* Role Cards - Only 4 cards as per design */}
-          <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} spacing={6} mb={8}>
+          {/* Role Cards */}
+          <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 6 }} spacing={6} mb={8}>
             {/* Asesino */}
             <Box
+              as={RouterLink}
+              to="/champions?role=Assassin"
               bg={cardBg}
               p={6}
               borderRadius="lg"
@@ -259,6 +234,7 @@ const Home: React.FC = () => {
               border="1px"
               borderColor={useColorModeValue('gray.200', 'background.muted')}
               transition="all 0.2s"
+              cursor="pointer"
               _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl', borderColor: '#EF4444' }}
             >
               <VStack spacing={4} align="center">
@@ -272,12 +248,7 @@ const Home: React.FC = () => {
                   w="64px"
                   h="64px"
                 >
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2L8 8h8l-4-6z" />
-                    <path d="M12 8v14" />
-                    <path d="M8 8h8" />
-                    <circle cx="12" cy="6" r="1" fill="#EF4444" />
-                  </svg>
+                  <Icon as={Sword} color="#EF4444" boxSize={8} strokeWidth={2} />
                 </Box>
                 <Heading size="md" color={useColorModeValue('gray.800', 'foreground.primary')} textAlign="center">
                   Asesino
@@ -290,6 +261,8 @@ const Home: React.FC = () => {
 
             {/* Tanque */}
             <Box
+              as={RouterLink}
+              to="/champions?role=Tank"
               bg={cardBg}
               p={6}
               borderRadius="lg"
@@ -297,6 +270,7 @@ const Home: React.FC = () => {
               border="1px"
               borderColor={useColorModeValue('gray.200', 'background.muted')}
               transition="all 0.2s"
+              cursor="pointer"
               _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl', borderColor: 'magic.400' }}
             >
               <VStack spacing={4} align="center">
@@ -310,7 +284,7 @@ const Home: React.FC = () => {
                   w="64px"
                   h="64px"
                 >
-                  <ShieldIcon color="#36C5F0" size={32} />
+                  <Icon as={Shield} color="#36C5F0" boxSize={8} strokeWidth={2} />
                 </Box>
                 <Heading size="md" color={useColorModeValue('gray.800', 'foreground.primary')} textAlign="center">
                   Tanque
@@ -323,6 +297,8 @@ const Home: React.FC = () => {
 
             {/* Mago */}
             <Box
+              as={RouterLink}
+              to="/champions?role=Mage"
               bg={cardBg}
               p={6}
               borderRadius="lg"
@@ -330,6 +306,7 @@ const Home: React.FC = () => {
               border="1px"
               borderColor={useColorModeValue('gray.200', 'background.muted')}
               transition="all 0.2s"
+              cursor="pointer"
               _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl', borderColor: '#A855F7' }}
             >
               <VStack spacing={4} align="center">
@@ -343,15 +320,7 @@ const Home: React.FC = () => {
                   w="64px"
                   h="64px"
                 >
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#A855F7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2v8M12 14v8" />
-                    <path d="M12 10L8 14l4 4 4-4-4-4z" />
-                    <path d="M5 3l2 2M19 3l-2 2M5 21l2-2M19 21l-2-2" />
-                    <circle cx="3" cy="3" r="1.5" fill="#A855F7" />
-                    <circle cx="21" cy="3" r="1.5" fill="#A855F7" />
-                    <circle cx="3" cy="21" r="1.5" fill="#A855F7" />
-                    <circle cx="21" cy="21" r="1.5" fill="#A855F7" />
-                  </svg>
+                  <Icon as={Wand2} color="#A855F7" boxSize={8} strokeWidth={2} />
                 </Box>
                 <Heading size="md" color={useColorModeValue('gray.800', 'foreground.primary')} textAlign="center">
                   Mago
@@ -364,6 +333,8 @@ const Home: React.FC = () => {
 
             {/* Tirador */}
             <Box
+              as={RouterLink}
+              to="/champions?role=Marksman"
               bg={cardBg}
               p={6}
               borderRadius="lg"
@@ -371,6 +342,7 @@ const Home: React.FC = () => {
               border="1px"
               borderColor={useColorModeValue('gray.200', 'background.muted')}
               transition="all 0.2s"
+              cursor="pointer"
               _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl', borderColor: 'gold.200' }}
             >
               <VStack spacing={4} align="center">
@@ -384,17 +356,85 @@ const Home: React.FC = () => {
                   w="64px"
                   h="64px"
                 >
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#F0B429" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <circle cx="12" cy="12" r="6" />
-                    <circle cx="12" cy="12" r="2" />
-                  </svg>
+                  <Icon as={Target} color="#F0B429" boxSize={8} strokeWidth={2} />
                 </Box>
                 <Heading size="md" color={useColorModeValue('gray.800', 'foreground.primary')} textAlign="center">
                   Tirador
                 </Heading>
                 <Text color={useColorModeValue('gray.600', 'foreground.muted')} fontSize="sm" lineHeight="relaxed" textAlign="center">
                   Daño sostenido a distancia
+                </Text>
+              </VStack>
+            </Box>
+
+            {/* Luchador */}
+            <Box
+              as={RouterLink}
+              to="/champions?role=Fighter"
+              bg={cardBg}
+              p={6}
+              borderRadius="lg"
+              boxShadow="md"
+              border="1px"
+              borderColor={useColorModeValue('gray.200', 'background.muted')}
+              transition="all 0.2s"
+              cursor="pointer"
+              _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl', borderColor: '#F97316' }}
+            >
+              <VStack spacing={4} align="center">
+                <Box
+                  bg={useColorModeValue('gray.100', '#2C2E3B')}
+                  borderRadius="full"
+                  p={3}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  w="64px"
+                  h="64px"
+                >
+                  <Icon as={Axe} color="#F97316" boxSize={8} strokeWidth={2} />
+                </Box>
+                <Heading size="md" color={useColorModeValue('gray.800', 'foreground.primary')} textAlign="center">
+                  Luchador
+                </Heading>
+                <Text color={useColorModeValue('gray.600', 'foreground.muted')} fontSize="sm" lineHeight="relaxed" textAlign="center">
+                  Combate cuerpo a cuerpo
+                </Text>
+              </VStack>
+            </Box>
+
+            {/* Apoyo */}
+            <Box
+              as={RouterLink}
+              to="/champions?role=Support"
+              bg={cardBg}
+              p={6}
+              borderRadius="lg"
+              boxShadow="md"
+              border="1px"
+              borderColor={useColorModeValue('gray.200', 'background.muted')}
+              transition="all 0.2s"
+              cursor="pointer"
+              _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl', borderColor: '#10B981' }}
+            >
+              <VStack spacing={4} align="center">
+                <Box
+                  bg={useColorModeValue('gray.100', '#2C2E3B')}
+                  borderRadius="full"
+                  p={3}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  w="64px"
+                  h="64px"
+                >
+                  <Icon as={HeartHandshake} color="#10B981" boxSize={8} strokeWidth={2} />
+                </Box>
+                <Heading size="md" color={useColorModeValue('gray.800', 'foreground.primary')} textAlign="center">
+                  Apoyo
+                </Heading>
+                <Text color={useColorModeValue('gray.600', 'foreground.muted')} fontSize="sm" lineHeight="relaxed" textAlign="center">
+                  Protección y utilidad
                 </Text>
               </VStack>
             </Box>
@@ -461,9 +501,7 @@ const Home: React.FC = () => {
                   alignItems="center"
                   justifyContent="center"
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>
+                  <Icon as={Heart} color="white" boxSize={6} strokeWidth={2} fill="white" />
                 </Box>
                 <VStack align="start" spacing={2} flex={1}>
                   <Heading size="md" color={useColorModeValue('gray.800', 'foreground.primary')}>
@@ -489,9 +527,7 @@ const Home: React.FC = () => {
             >
               <HStack spacing={4} align="start">
                 <Box bg="gold.200" p={3} borderRadius="md" minW="48px" minH="48px" display="flex" alignItems="center" justifyContent="center">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F1419" strokeWidth="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
+                  <Icon as={Star} color="#0F1419" boxSize={6} strokeWidth={2} fill="#0F1419" />
                 </Box>
                 <VStack align="start" spacing={2} flex={1}>
                   <Heading size="md" color={useColorModeValue('gray.800', 'foreground.primary')}>
@@ -517,9 +553,7 @@ const Home: React.FC = () => {
             >
               <HStack spacing={4} align="start">
                 <Box bg="magic.400" p={3} borderRadius="md" minW="48px" minH="48px" display="flex" alignItems="center" justifyContent="center">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F1419" strokeWidth="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
+                  <Icon as={MessageCircle} color="#0F1419" boxSize={6} strokeWidth={2} />
                 </Box>
                 <VStack align="start" spacing={2} flex={1}>
                   <Heading size="md" color={useColorModeValue('gray.800', 'foreground.primary')}>
@@ -545,7 +579,7 @@ const Home: React.FC = () => {
             >
               <HStack spacing={4} align="start">
                 <Box bg="#A855F7" p={3} borderRadius="md" minW="48px" minH="48px" display="flex" alignItems="center" justifyContent="center">
-                  <TrophyIcon color="#0F1419" size={24} />
+                  <Icon as={Trophy} color="#0F1419" boxSize={6} strokeWidth={2} />
                 </Box>
                 <VStack align="start" spacing={2} flex={1}>
                   <Heading size="md" color={useColorModeValue('gray.800', 'foreground.primary')}>

@@ -9,8 +9,9 @@ import {
   useColorModeValue,
   IconButton,
   useToast,
+  Icon,
 } from '@chakra-ui/react'
-import { StarIcon } from '@chakra-ui/icons'
+import { Star } from 'lucide-react'
 import { Link as RouterLink } from 'react-router-dom'
 import { DATA_DRAGON_BASE } from '../config'
 import { useAuth } from '../contexts/AuthContext'
@@ -134,7 +135,7 @@ const ChampionCard: React.FC<ChampionCardProps> = ({ id, name, title, image, tag
         {isAuthenticated && (
           <IconButton
             aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-            icon={<StarIcon />}
+            icon={<Icon as={Star} fill={isFavorite ? 'currentColor' : 'none'} />}
             position="absolute"
             top={2}
             right={2}
