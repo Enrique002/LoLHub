@@ -369,6 +369,12 @@ export const theme = extendTheme({
           bg: 'magic.400',
           color: 'background.primary',
         },
+        outline: (props: any) => ({
+          border: '2px solid',
+          borderColor: props.colorScheme === 'gold' ? 'gold.200' : props.colorScheme === 'magic' ? 'magic.400' : 'background.muted',
+          color: props.colorScheme === 'gold' ? 'gold.200' : props.colorScheme === 'magic' ? 'magic.400' : 'foreground.muted',
+          bg: 'transparent',
+        }),
       },
     },
   },

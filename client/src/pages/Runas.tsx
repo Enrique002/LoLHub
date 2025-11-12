@@ -31,6 +31,9 @@ import {
   ModalBody,
   ModalCloseButton,
   useDisclosure,
+  Button,
+  Wrap,
+  WrapItem,
 } from '@chakra-ui/react';
 import { Search } from 'lucide-react';
 import axios from 'axios';
@@ -108,9 +111,6 @@ const Runas: React.FC = () => {
   const [runaSeleccionada, setRunaSeleccionada] = useState<Runa | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const fondoCard = useColorModeValue('white', 'gray.800');
-  const fondoHover = useColorModeValue('gray.50', 'gray.700');
-  const colorBorde = useColorModeValue('gray.200', 'gray.700');
 
   /**
    * Carga las runas desde la API de Data Dragon
@@ -118,7 +118,7 @@ const Runas: React.FC = () => {
   useEffect(() => {
     const cargarRunas = async () => {
       try {
-        const url = `${DATA_DRAGON_BASE}/data/en_US/runesReforged.json`;
+        const url = `${DATA_DRAGON_BASE}/data/es_ES/runesReforged.json`;
         const respuesta = await axios.get<ArbolRuna[]>(url);
         
         // Ordenar los árboles según el orden especificado
@@ -185,10 +185,22 @@ const Runas: React.FC = () => {
       <VStack spacing={8} align="stretch">
         {/* Encabezado */}
         <Box>
-          <Heading size="xl" mb={2} color={useColorModeValue('gray.800', 'white')}>
-            Runas
+          <Heading 
+            size={{ base: '3xl', md: '4xl' }}
+            mb={2}
+            fontWeight="extrabold"
+            letterSpacing="tight"
+            lineHeight="tight"
+            color="foreground.primary"
+          >
+            <Box as="span" color="foreground.primary">
+              Explora las{' '}
+            </Box>
+            <Box as="span" color="gold.200">
+              Runas
+            </Box>
           </Heading>
-          <Text color={useColorModeValue('gray.600', 'gray.400')} fontSize="lg">
+          <Text fontSize={{ base: 'md', md: 'lg' }} color="foreground.muted" lineHeight="relaxed">
             Explora todas las runas de League of Legends organizadas por árboles
           </Text>
         </Box>
@@ -197,57 +209,67 @@ const Runas: React.FC = () => {
         <VStack spacing={4} align="stretch">
           <InputGroup size="lg">
             <InputLeftElement pointerEvents="none">
-              <Icon as={Search} color="gray.400" />
+              <Icon as={Search} color="foreground.muted" />
             </InputLeftElement>
             <Input
               placeholder="Buscar runas por nombre o descripción..."
               value={terminoBusqueda}
               onChange={(evento) => setTerminoBusqueda(evento.target.value)}
-              bg={useColorModeValue('white', 'gray.800')}
-              border="2px"
-              borderColor={useColorModeValue('gray.200', 'gray.700')}
+              variant="outline"
+              bg="background.card"
+              borderColor="background.muted"
               _focus={{
-                borderColor: 'blue.500',
-                boxShadow: '0 0 0 1px var(--chakra-colors-blue-500)',
+                borderColor: 'gold.200',
+                boxShadow: '0 0 0 1px var(--chakra-colors-gold-200)',
               }}
             />
           </InputGroup>
 
           {/* Filtros por árbol */}
-          <HStack spacing={2} flexWrap="wrap">
-            <Badge
-              px={3}
-              py={1}
-              borderRadius="full"
-              cursor="pointer"
-              colorScheme={arbolSeleccionado === 'todos' ? 'blue' : 'gray'}
-              onClick={() => setArbolSeleccionado('todos')}
-              _hover={{ transform: 'scale(1.05)' }}
-              transition="all 0.2s"
-            >
-              Todos
-            </Badge>
-            {ordenArboles.map((claveArbol) => {
-              const arbol = arbolesRunas.find((a) => a.key === claveArbol);
-              if (!arbol) return null;
-              
-              return (
-                <Badge
-                  key={claveArbol}
-                  px={3}
-                  py={1}
-                  borderRadius="full"
-                  cursor="pointer"
-                  colorScheme={arbolSeleccionado === claveArbol ? 'blue' : 'gray'}
-                  onClick={() => setArbolSeleccionado(claveArbol)}
-                  _hover={{ transform: 'scale(1.05)' }}
+          <Box>
+            <Text fontWeight="bold" mb={3} fontSize="sm" color="foreground.primary" textTransform="uppercase" letterSpacing="wide">
+              Filtrar por Árbol
+            </Text>
+            <Wrap spacing={2}>
+              <WrapItem>
+                <Button
+                  size="sm"
+                  variant={arbolSeleccionado === 'todos' ? 'default' : 'outline'}
+                  colorScheme="gold"
+                  onClick={() => setArbolSeleccionado('todos')}
+                  _hover={{
+                    transform: 'scale(1.05)',
+                    boxShadow: 'xl',
+                  }}
                   transition="all 0.2s"
                 >
-                  {nombresArboles[claveArbol] || claveArbol}
-                </Badge>
-              );
-            })}
-          </HStack>
+                  Todos
+                </Button>
+              </WrapItem>
+              {ordenArboles.map((claveArbol) => {
+                const arbol = arbolesRunas.find((a) => a.key === claveArbol);
+                if (!arbol) return null;
+                
+                return (
+                  <WrapItem key={claveArbol}>
+                    <Button
+                      size="sm"
+                      variant={arbolSeleccionado === claveArbol ? 'default' : 'outline'}
+                      colorScheme="gold"
+                      onClick={() => setArbolSeleccionado(claveArbol)}
+                      _hover={{
+                        transform: 'scale(1.05)',
+                        boxShadow: 'xl',
+                      }}
+                      transition="all 0.2s"
+                    >
+                      {nombresArboles[claveArbol] || claveArbol}
+                    </Button>
+                  </WrapItem>
+                );
+              })}
+            </Wrap>
+          </Box>
         </VStack>
 
         {/* Árboles de Runas */}
@@ -256,12 +278,17 @@ const Runas: React.FC = () => {
             {arbolesFiltrados.map((arbol) => (
               <Box
                 key={arbol.id}
-                bg={fondoCard}
+                bg="background.card"
                 p={6}
                 borderRadius="lg"
                 boxShadow="md"
                 border="1px"
-                borderColor={colorBorde}
+                borderColor="background.muted"
+                transition="all 0.2s"
+                _hover={{
+                  borderColor: 'gold.200',
+                  boxShadow: 'xl',
+                }}
               >
                 {/* Encabezado del Árbol */}
                 <HStack spacing={4} mb={6} align="center">
@@ -278,16 +305,16 @@ const Runas: React.FC = () => {
                     }}
                   />
                   <VStack align="start" spacing={0}>
-                    <Heading size="lg" color={useColorModeValue('gray.800', 'white')}>
+                    <Heading size="lg" fontWeight="bold" color="foreground.primary">
                       {nombresArboles[arbol.key] || arbol.name}
                     </Heading>
-                    <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
+                    <Text fontSize="sm" color="foreground.muted">
                       {arbol.name}
                     </Text>
                   </VStack>
                 </HStack>
 
-                <Divider mb={6} borderColor={colorBorde} />
+                <Divider mb={6} borderColor="background.muted" />
 
                 {/* Slots de Runas */}
                 <VStack spacing={6} align="stretch">
@@ -297,8 +324,9 @@ const Runas: React.FC = () => {
                         fontWeight="bold"
                         mb={3}
                         fontSize="sm"
-                        color={useColorModeValue('gray.600', 'gray.400')}
+                        color="foreground.muted"
                         textTransform="uppercase"
+                        letterSpacing="wide"
                       >
                         {indiceSlot === 0 ? 'Runa Keystone' : `Slot ${indiceSlot}`}
                       </Text>
@@ -306,9 +334,9 @@ const Runas: React.FC = () => {
                         {slot.runes.map((runa) => (
                           <Card
                             key={runa.id}
-                            bg={fondoCard}
-                            border="2px"
-                            borderColor={colorBorde}
+                            bg="background.card"
+                            border="1px"
+                            borderColor="background.muted"
                             cursor="pointer"
                             transition="all 0.2s"
                             onClick={() => {
@@ -317,9 +345,8 @@ const Runas: React.FC = () => {
                             }}
                             _hover={{
                               transform: 'scale(1.05)',
-                              boxShadow: 'xl',
-                              borderColor: 'blue.400',
-                              bg: fondoHover,
+                              boxShadow: '2xl',
+                              borderColor: 'gold.200',
                             }}
                           >
                               <CardBody p={4}>
@@ -340,14 +367,14 @@ const Runas: React.FC = () => {
                                     fontSize="sm"
                                     fontWeight="semibold"
                                     textAlign="center"
-                                    color={useColorModeValue('gray.800', 'white')}
+                                    color="foreground.primary"
                                     noOfLines={2}
                                   >
                                     {runa.name}
                                   </Text>
                                   <Text
                                     fontSize="xs"
-                                    color={useColorModeValue('gray.600', 'gray.400')}
+                                    color="foreground.muted"
                                     textAlign="center"
                                     noOfLines={2}
                                   >
@@ -365,8 +392,8 @@ const Runas: React.FC = () => {
             ))}
           </VStack>
         ) : (
-          <Box textAlign="center" py={12} bg={fondoCard} borderRadius="lg" boxShadow="md">
-            <Text fontSize="xl" color={useColorModeValue('gray.600', 'gray.400')}>
+          <Box textAlign="center" py={12} bg="background.card" borderRadius="lg" boxShadow="md" border="1px" borderColor="background.muted">
+            <Text fontSize="lg" color="foreground.muted">
               No se encontraron runas con los filtros seleccionados
             </Text>
           </Box>
@@ -383,8 +410,9 @@ const Runas: React.FC = () => {
         >
           <ModalHeader
             fontSize="2xl"
-            fontWeight="bold"
-            color={useColorModeValue('gray.800', 'foreground.primary')}
+            fontWeight="extrabold"
+            letterSpacing="tight"
+            color="foreground.primary"
           >
             {runaSeleccionada?.name}
           </ModalHeader>
@@ -408,14 +436,14 @@ const Runas: React.FC = () => {
                   <VStack align="start" spacing={2} flex={1}>
                     <Text
                       fontSize="lg"
-                      fontWeight="semibold"
-                      color={useColorModeValue('gray.800', 'foreground.primary')}
+                      fontWeight="bold"
+                      color="foreground.primary"
                     >
                       {runaSeleccionada.name}
                     </Text>
                     <Text
                       fontSize="sm"
-                      color={useColorModeValue('gray.600', 'foreground.muted')}
+                      color="foreground.muted"
                       lineHeight="relaxed"
                     >
                       {limpiarHTML(runaSeleccionada.shortDesc)}
@@ -423,15 +451,15 @@ const Runas: React.FC = () => {
                   </VStack>
                 </HStack>
 
-                <Divider borderColor={useColorModeValue('gray.200', 'background.muted')} />
+                <Divider borderColor="background.muted" />
 
                 <Box>
-                  <Heading size="sm" mb={3} color={useColorModeValue('gray.700', 'foreground.primary')}>
+                  <Heading size="sm" mb={3} fontWeight="bold" color="foreground.primary">
                     Descripción Completa
                   </Heading>
                   <Text
                     fontSize="sm"
-                    color={useColorModeValue('gray.700', 'foreground.primary')}
+                    color="foreground.primary"
                     lineHeight="relaxed"
                     whiteSpace="pre-wrap"
                   >

@@ -1,6 +1,6 @@
 'use strict';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Box,
@@ -26,6 +26,13 @@ import {
   StatHelpText,
   Divider,
   Grid,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import { DATA_DRAGON_BASE } from '../config';
@@ -35,6 +42,7 @@ import { construirUrlVideoHabilidad } from '../utilidades/videosHabilidades';
 
 interface ChampionDetail {
   id: string
+  key?: string // ID numérico del campeón (si está disponible en la API)
   name: string
   title: string
   image: {
@@ -96,10 +104,42 @@ interface ChampionResponse {
  * Componente de detalle del campeón
  * Muestra información completa del campeón incluyendo habilidades, estadísticas y objetos recomendados
  */
+type ItemData = {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  plaintext?: string;
+  description?: string;
+  stats?: Record<string, number>;
+  maps?: Record<string, boolean>;
+}
+
+type ItemMap = {
+  [id: string]: {
+    name: string
+    description?: string
+    plaintext?: string
+    gold?: { base: number; total: number; sell: number; purchasable: boolean }
+    image?: { full: string }
+    stats?: Record<string, number>
+    maps?: Record<string, boolean>
+    requiredChampion?: string
+    inStore?: boolean
+  }
+}
+
+type ItemsResponse = {
+  data: ItemMap
+}
+
 const ChampionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [campeon, setCampeon] = useState<ChampionDetail | null>(null);
   const [cargando, setCargando] = useState(true);
+  const [items, setItems] = useState<Map<string, ItemData>>(new Map());
+  const [itemSeleccionado, setItemSeleccionado] = useState<ItemData | null>(null);
+  const { isOpen: isItemModalOpen, onOpen: onItemModalOpen, onClose: onItemModalClose } = useDisclosure();
   const [habilidadSeleccionada, setHabilidadSeleccionada] = useState<{
     urlVideo: string;
     nombre: string;
@@ -113,7 +153,7 @@ const ChampionDetail: React.FC = () => {
     const cargarDetallesCampeon = async () => {
       try {
         const respuesta = await axios.get<ChampionResponse>(
-          `${DATA_DRAGON_BASE}/data/en_US/champion/${id}.json`
+          `${DATA_DRAGON_BASE}/data/es_ES/champion/${id}.json`
         );
         if (id && respuesta.data.data[id]) {
           setCampeon(respuesta.data.data[id]);
@@ -131,6 +171,187 @@ const ChampionDetail: React.FC = () => {
   }, [id]);
 
   /**
+   * Carga los datos de items para poder mostrar sus imágenes y detalles
+   */
+  useEffect(() => {
+    const cargarItems = async () => {
+      try {
+        const respuesta = await axios.get<ItemsResponse>(
+          `${DATA_DRAGON_BASE}/data/es_ES/item.json`
+        );
+        const map = respuesta.data.data;
+        const itemsMap = new Map<string, ItemData>();
+        
+        Object.entries(map).forEach(([itemId, item]) => {
+          if (item.image?.full) {
+            itemsMap.set(itemId, {
+              id: itemId,
+              name: item.name,
+              price: item.gold?.total ?? 0,
+              image: `${DATA_DRAGON_BASE}/img/item/${item.image.full}`,
+              plaintext: item.plaintext,
+              description: item.description,
+              stats: item.stats ?? {},
+              maps: item.maps ?? {},
+            });
+          }
+        });
+        
+        setItems(itemsMap);
+      } catch (error) {
+        console.error('Error al cargar items:', error);
+      }
+    };
+
+    cargarItems();
+  }, []);
+
+  /**
+   * Genera builds recomendadas basadas en el rol del campeón
+   * Como la API de Data Dragon no incluye recommended, creamos builds genéricas por rol
+   */
+  const recomendacionesSR = useMemo(() => {
+    if (!campeon || items.size === 0) {
+      return [];
+    }
+    
+    // Si hay recomendaciones de la API, usarlas
+    if (campeon.recommended && Array.isArray(campeon.recommended) && campeon.recommended.length > 0) {
+      return campeon.recommended
+        .map(rec => {
+          if (!rec.blocks || !Array.isArray(rec.blocks) || rec.blocks.length === 0) {
+            return null;
+          }
+          
+          const blocksProcesados = rec.blocks
+            .map(block => {
+              if (!block.items || !Array.isArray(block.items) || block.items.length === 0) {
+                return null;
+              }
+              return { ...block, items: block.items };
+            })
+            .filter(block => block !== null && block.items.length > 0);
+          
+          if (blocksProcesados.length === 0) {
+            return null;
+          }
+          
+          return { ...rec, blocks: blocksProcesados };
+        })
+        .filter(rec => rec !== null);
+    }
+    
+    // Si no hay recomendaciones, generar builds basadas en el rol
+    const roles = campeon.tags || [];
+    if (roles.length === 0) {
+      return [];
+    }
+    
+    // Mapeo de roles a items populares
+    // Usamos nombres de items comunes que luego buscaremos por nombre en el mapa de items
+    const buildsPorRol: Record<string, { type: string; blocks: Array<{ type: string; itemNames: string[] }> }> = {
+      Fighter: {
+        type: 'Build de Luchador',
+        blocks: [
+          { type: 'Inicio', itemNames: ['Daga', 'Poción de Vida'] },
+          { type: 'Objetos Principales', itemNames: ['Hidra Profana', 'Hidra Titánica', 'Hidra Rápida'] },
+          { type: 'Botas', itemNames: ['Botas de Mercurio'] },
+          { type: 'Objetos Defensivos', itemNames: ['Coraza del Muerto', 'Cota de Espinas'] },
+        ]
+      },
+      Tank: {
+        type: 'Build de Tanque',
+        blocks: [
+          { type: 'Inicio', itemNames: ['Daga', 'Poción de Vida'] },
+          { type: 'Objetos Principales', itemNames: ['Coraza del Muerto', 'Cota de Espinas', 'Corazón de Hielo'] },
+          { type: 'Botas', itemNames: ['Botas de Armadura'] },
+          { type: 'Objetos Defensivos', itemNames: ['Visión del Abismo', 'Gargola de Piedra'] },
+        ]
+      },
+      Mage: {
+        type: 'Build de Mago',
+        blocks: [
+          { type: 'Inicio', itemNames: ['Anillo de Doran', 'Poción de Vida'] },
+          { type: 'Objetos Principales', itemNames: ['Llamada del Verdugo', 'Sombrero Mortífero de Rabadon', 'Cetro Abisal'] },
+          { type: 'Botas', itemNames: ['Botas del Hechicero'] },
+          { type: 'Objetos Mágicos', itemNames: ['Báculo del Vacío', 'Reloj de Arena de Zhonya'] },
+        ]
+      },
+      Assassin: {
+        type: 'Build de Asesino',
+        blocks: [
+          { type: 'Inicio', itemNames: ['Espada Larga', 'Poción de Vida'] },
+          { type: 'Objetos Principales', itemNames: ['Hidra Profana', 'Hidra Rápida', 'Hidra Titánica'] },
+          { type: 'Botas', itemNames: ['Botas de Mercurio'] },
+          { type: 'Objetos de Letalidad', itemNames: ['Último Suspiro', 'Oportunidad'] },
+        ]
+      },
+      Marksman: {
+        type: 'Build de Tirador',
+        blocks: [
+          { type: 'Inicio', itemNames: ['Daga', 'Poción de Vida'] },
+          { type: 'Objetos Principales', itemNames: ['Infinito', 'Filo Fantasma', 'Cañón de Fuego Rápido'] },
+          { type: 'Botas', itemNames: ['Botas de Mercurio'] },
+          { type: 'Objetos de Crítico', itemNames: ['Filo de la Tormenta', 'Guantelete de Fuego'] },
+        ]
+      },
+      Support: {
+        type: 'Build de Apoyo',
+        blocks: [
+          { type: 'Inicio', itemNames: ['Relicario de Escudo', 'Poción de Vida'] },
+          { type: 'Objetos Principales', itemNames: ['Relicario de Escudo de Hierro', 'Visión del Abismo', 'Gargola de Piedra'] },
+          { type: 'Botas', itemNames: ['Botas de Movimiento'] },
+          { type: 'Objetos de Apoyo', itemNames: ['Redención', 'Locket del Solari de Hierro'] },
+        ]
+      },
+    };
+    
+    // Función para buscar items por nombre (parcial)
+    const buscarItemPorNombre = (nombre: string): string | null => {
+      for (const [itemId, itemData] of items.entries()) {
+        if (itemData.name.toLowerCase().includes(nombre.toLowerCase()) || 
+            nombre.toLowerCase().includes(itemData.name.toLowerCase())) {
+          return itemId;
+        }
+      }
+      return null;
+    };
+    
+    // Filtrar items que existen y están disponibles en SR
+    const buildsFiltradas = roles.map(rol => {
+      const build = buildsPorRol[rol];
+      if (!build) return null;
+      
+      const blocksFiltrados = build.blocks.map(block => {
+        const itemsEncontrados = block.itemNames
+          .map(itemName => {
+            const itemId = buscarItemPorNombre(itemName);
+            if (!itemId) return null;
+            
+            const itemData = items.get(itemId);
+            if (!itemData) return null;
+            
+            // Verificar que esté disponible en SR (mapa 11)
+            if (itemData.maps && Object.keys(itemData.maps).length > 0) {
+              if (itemData.maps['11'] === false) return null;
+            }
+            
+            return { id: itemId, count: 1 };
+          })
+          .filter(item => item !== null) as Array<{ id: string; count: number }>;
+        
+        return { type: block.type, items: itemsEncontrados };
+      }).filter(block => block.items.length > 0);
+      
+      if (blocksFiltrados.length === 0) return null;
+      
+      return { type: build.type, blocks: blocksFiltrados };
+    }).filter(build => build !== null);
+    
+    return buildsFiltradas;
+  }, [campeon, items]);
+
+  /**
    * Maneja el clic en una habilidad para mostrar su video
    * @param {number} indice - Índice de la habilidad
    * @param {string} nombreHabilidad - Nombre de la habilidad
@@ -138,7 +359,7 @@ const ChampionDetail: React.FC = () => {
   const manejarClicHabilidad = (indice: number, nombreHabilidad: string) => {
     if (!id) return;
     
-    const urlVideo = construirUrlVideoHabilidad(id, indice);
+    const urlVideo = construirUrlVideoHabilidad(id, indice, campeon?.key);
     
     if (urlVideo) {
       setHabilidadSeleccionada({
@@ -283,7 +504,7 @@ const ChampionDetail: React.FC = () => {
             <TabPanel px={0}>
               <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4}>
                 {campeon.spells.map((habilidad, indice) => {
-                  const urlVideo = id ? construirUrlVideoHabilidad(id, indice) : null;
+                  const urlVideo = id ? construirUrlVideoHabilidad(id, indice, campeon?.key) : null;
                   const tieneVideo = urlVideo !== null;
                   
                   return (
@@ -384,51 +605,109 @@ const ChampionDetail: React.FC = () => {
 
             <TabPanel px={0}>
               <VStack spacing={6} align="stretch">
-                {campeon.recommended.length > 0 ? (
-                  campeon.recommended.map((recomendacion, indice) => (
-                    <Box key={indice} bg={fondoCard} p={6} borderRadius="lg" boxShadow="md" border="1px" borderColor={useColorModeValue('gray.200', 'gray.700')}>
-                      <Heading size="md" mb={4} color="blue.500">
-                        {recomendacion.type}
+                {recomendacionesSR.length > 0 ? (
+                  recomendacionesSR.map((recomendacion, indice) => (
+                    <Box 
+                      key={indice} 
+                      bg={useColorModeValue('white', 'background.card')} 
+                      p={6} 
+                      borderRadius="lg" 
+                      boxShadow="md" 
+                      border="1px" 
+                      borderColor={useColorModeValue('gray.200', 'background.muted')}
+                    >
+                      <Heading 
+                        size="md" 
+                        mb={4} 
+                        fontWeight="bold"
+                        color="foreground.primary"
+                      >
+                        {recomendacion.type || 'Build Recomendada'}
                       </Heading>
-                      <Divider mb={4} borderColor={useColorModeValue('gray.200', 'gray.700')} />
+                      <Divider mb={4} borderColor={useColorModeValue('gray.200', 'background.muted')} />
                       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
                         {recomendacion.blocks.map((bloque, indiceBloque) => (
                           <Box key={indiceBloque}>
-                            <Text fontWeight="bold" mb={3} fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')} textTransform="uppercase">
+                            <Text 
+                              fontWeight="bold" 
+                              mb={4} 
+                              fontSize="sm" 
+                              color="foreground.muted" 
+                              textTransform="uppercase"
+                              letterSpacing="wide"
+                            >
                               {bloque.type}
                             </Text>
-                            <SimpleGrid columns={6} spacing={2}>
-                              {bloque.items.map((objeto) => (
-                                <Box
-                                  key={objeto.id}
-                                  bg={fondoStat}
-                                  p={2}
-                                  borderRadius="md"
-                                  textAlign="center"
-                                  minH="60px"
-                                  display="flex"
-                                  alignItems="center"
-                                  justifyContent="center"
-                                  border="2px"
-                                  borderColor="transparent"
-                                  _hover={{
-                                    borderColor: 'blue.400',
-                                    transform: 'scale(1.1)',
-                                  }}
-                                  transition="all 0.2s"
-                                >
-                                  <VStack spacing={0}>
-                                    <Text fontSize="xs" fontWeight="bold">
-                                      {objeto.id}
-                                    </Text>
-                                    {objeto.count > 1 && (
-                                      <Text fontSize="xs" color="blue.500">
-                                        x{objeto.count}
-                                      </Text>
-                                    )}
-                                  </VStack>
-                                </Box>
-                              ))}
+                            <SimpleGrid columns={6} spacing={3}>
+                              {bloque.items.map((objeto) => {
+                                const itemData = items.get(objeto.id);
+                                const itemImage = itemData 
+                                  ? itemData.image 
+                                  : `${DATA_DRAGON_BASE}/img/item/${objeto.id}.png`;
+                                const itemName = itemData?.name || `Item ${objeto.id}`;
+                                
+                                return (
+                                  <Box
+                                    key={objeto.id}
+                                    position="relative"
+                                    bg={useColorModeValue('gray.50', 'background.secondary')}
+                                    p={2}
+                                    borderRadius="md"
+                                    textAlign="center"
+                                    minH="64px"
+                                    display="flex"
+                                    alignItems="center"
+                                    justifyContent="center"
+                                    border="2px"
+                                    borderColor="transparent"
+                                    cursor={itemData ? "pointer" : "default"}
+                                    onClick={() => {
+                                      if (itemData) {
+                                        setItemSeleccionado(itemData);
+                                        onItemModalOpen();
+                                      }
+                                    }}
+                                    _hover={itemData ? {
+                                      borderColor: 'gold.200',
+                                      transform: 'scale(1.1)',
+                                      boxShadow: 'xl',
+                                    } : {}}
+                                    transition="all 0.2s"
+                                  >
+                                    <VStack spacing={1}>
+                                      <Image
+                                        src={itemImage}
+                                        alt={itemName}
+                                        boxSize="48px"
+                                        objectFit="contain"
+                                        loading="lazy"
+                                        onError={(e) => {
+                                          // Si falla la imagen, intentar con el formato estándar
+                                          const target = e.target as HTMLImageElement;
+                                          target.src = `${DATA_DRAGON_BASE}/img/item/${objeto.id}.png`;
+                                        }}
+                                      />
+                                      {objeto.count > 1 && (
+                                        <Badge
+                                          position="absolute"
+                                          top={1}
+                                          right={1}
+                                          variant="gold"
+                                          fontSize="xs"
+                                          borderRadius="full"
+                                          minW="20px"
+                                          h="20px"
+                                          display="flex"
+                                          alignItems="center"
+                                          justifyContent="center"
+                                        >
+                                          {objeto.count}
+                                        </Badge>
+                                      )}
+                                    </VStack>
+                                  </Box>
+                                );
+                              })}
                             </SimpleGrid>
                           </Box>
                         ))}
@@ -436,8 +715,18 @@ const ChampionDetail: React.FC = () => {
                     </Box>
                   ))
                 ) : (
-                  <Box bg={fondoCard} p={6} borderRadius="lg" boxShadow="md" textAlign="center" border="1px" borderColor={useColorModeValue('gray.200', 'gray.700')}>
-                    <Text color={useColorModeValue('gray.600', 'gray.400')}>No hay objetos recomendados disponibles</Text>
+                  <Box 
+                    bg={useColorModeValue('white', 'background.card')} 
+                    p={6} 
+                    borderRadius="lg" 
+                    boxShadow="md" 
+                    textAlign="center" 
+                    border="1px" 
+                    borderColor={useColorModeValue('gray.200', 'background.muted')}
+                  >
+                    <Text color="foreground.muted">
+                      No hay objetos recomendados disponibles para Grieta del Invocador
+                    </Text>
                   </Box>
                 )}
               </VStack>
@@ -456,6 +745,121 @@ const ChampionDetail: React.FC = () => {
         nombreHabilidad={habilidadSeleccionada.nombre}
       />
     )}
+
+    {/* Modal de Detalles de Item */}
+    <Modal isOpen={isItemModalOpen} onClose={onItemModalClose} size="xl" isCentered>
+      <ModalOverlay bg="blackAlpha.700" backdropFilter="blur(10px)" />
+      <ModalContent
+        bg={useColorModeValue('white', 'background.card')}
+        borderRadius="xl"
+        maxW="700px"
+        boxShadow="2xl"
+      >
+        <ModalHeader
+          fontSize="2xl"
+          fontWeight="extrabold"
+          letterSpacing="tight"
+          color="foreground.primary"
+          pb={4}
+          borderBottom="1px"
+          borderColor="background.muted"
+        >
+          <HStack spacing={4} align="center">
+            {itemSeleccionado && (
+              <>
+                <Image
+                  src={itemSeleccionado.image}
+                  alt={itemSeleccionado.name}
+                  boxSize="64px"
+                  borderRadius="lg"
+                  objectFit="contain"
+                  bg={useColorModeValue('gray.50', 'background.secondary')}
+                  p={2}
+                />
+                <VStack align="start" spacing={1} flex={1}>
+                  <Text fontSize="2xl" fontWeight="extrabold" color="foreground.primary">
+                    {itemSeleccionado.name}
+                  </Text>
+                  {itemSeleccionado.price > 0 && (
+                    <Badge variant="gold" fontSize="md" px={3} py={1}>
+                      {itemSeleccionado.price} oro
+                    </Badge>
+                  )}
+                </VStack>
+              </>
+            )}
+          </HStack>
+        </ModalHeader>
+        <ModalCloseButton size="lg" />
+        <ModalBody pb={8} pt={6}>
+          {itemSeleccionado && (
+            <VStack spacing={6} align="stretch">
+              {itemSeleccionado.plaintext && (
+                <Box
+                  bg={useColorModeValue('gray.50', 'background.secondary')}
+                  p={4}
+                  borderRadius="lg"
+                  borderLeft="4px"
+                  borderColor="gold.200"
+                >
+                  <Text
+                    fontSize="md"
+                    color="foreground.primary"
+                    lineHeight="relaxed"
+                    fontStyle="italic"
+                  >
+                    {itemSeleccionado.plaintext}
+                  </Text>
+                </Box>
+              )}
+
+              {itemSeleccionado.description && (
+                <Box>
+                  <Heading 
+                    size="sm" 
+                    mb={4} 
+                    fontWeight="bold" 
+                    color="foreground.primary"
+                    textTransform="uppercase"
+                    letterSpacing="wide"
+                  >
+                    Descripción Completa
+                  </Heading>
+                  <Box
+                    bg={useColorModeValue('gray.50', 'background.secondary')}
+                    p={5}
+                    borderRadius="lg"
+                    border="1px"
+                    borderColor="background.muted"
+                  >
+                    <Text
+                      fontSize="sm"
+                      color="foreground.primary"
+                      lineHeight="relaxed"
+                      whiteSpace="pre-wrap"
+                      dangerouslySetInnerHTML={{ __html: itemSeleccionado.description }}
+                      sx={{
+                        '& p': {
+                          marginBottom: '0.75rem',
+                        },
+                        '& strong': {
+                          color: 'gold.200',
+                          fontWeight: 'bold',
+                        },
+                        '& em': {
+                          color: 'magic.400',
+                          fontStyle: 'italic',
+                        },
+                      }}
+                    />
+                  </Box>
+                </Box>
+              )}
+            </VStack>
+          )}
+        </ModalBody>
+      </ModalContent>
+    </Modal>
     </>
   );
 };

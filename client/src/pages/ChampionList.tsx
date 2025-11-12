@@ -60,7 +60,7 @@ const ChampionList: React.FC = () => {
   useEffect(() => {
     const fetchChampions = async () => {
       try {
-        const response = await axios.get(`${DATA_DRAGON_BASE}/data/en_US/champion.json`)
+        const response = await axios.get(`${DATA_DRAGON_BASE}/data/es_ES/champion.json`)
         const championsData = Object.values(response.data.data)
         setChampions(championsData as Champion[])
         setLoading(false)
@@ -140,11 +140,23 @@ const ChampionList: React.FC = () => {
     <Container maxW="1400px">
       <VStack spacing={8} align="stretch">
         <Box>
-          <Heading size="xl" mb={2} color={useColorModeValue('gray.800', 'white')}>
-            Campeones
+          <Heading 
+            size={{ base: '3xl', md: '4xl' }}
+            mb={2}
+            fontWeight="extrabold"
+            letterSpacing="tight"
+            lineHeight="tight"
+            color="foreground.primary"
+          >
+            <Box as="span" color="foreground.primary">
+              Explora los{' '}
+            </Box>
+            <Box as="span" color="gold.200">
+              Campeones
+            </Box>
           </Heading>
-          <Text color={useColorModeValue('gray.600', 'gray.400')} fontSize="lg">
-            Explora todos los campeones de League of Legends
+          <Text fontSize={{ base: 'md', md: 'lg' }} color="foreground.muted" lineHeight="relaxed">
+            Más de 160 campeones únicos esperan. Encuentra tu estilo de juego perfecto.
           </Text>
         </Box>
 
@@ -152,8 +164,8 @@ const ChampionList: React.FC = () => {
         {isAuthenticated && favoriteChampions.length > 0 && (
           <Box mb={8}>
             <HStack spacing={2} mb={4}>
-              <Icon as={Star} color="yellow.400" boxSize={5} fill="yellow.400" />
-              <Heading size="lg" color={useColorModeValue('gray.800', 'white')}>
+              <Icon as={Star} color="gold.200" boxSize={5} fill="gold.200" />
+              <Heading size="lg" fontWeight="bold" color="foreground.primary">
                 Mis Favoritos
               </Heading>
             </HStack>
@@ -170,7 +182,7 @@ const ChampionList: React.FC = () => {
                 />
               ))}
             </SimpleGrid>
-            <Divider borderColor={useColorModeValue('gray.300', 'gray.700')} />
+            <Divider borderColor="background.muted" />
           </Box>
         )}
 
@@ -178,33 +190,33 @@ const ChampionList: React.FC = () => {
         <VStack spacing={4} align="stretch">
           <InputGroup size="lg">
             <InputLeftElement pointerEvents="none">
-              <Icon as={Search} color="gray.400" />
+              <Icon as={Search} color="foreground.muted" />
             </InputLeftElement>
             <Input
               placeholder="Buscar campeones por nombre o título..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              bg={useColorModeValue('white', 'gray.800')}
-              border="2px"
-              borderColor={useColorModeValue('gray.200', 'gray.700')}
+              variant="outline"
+              bg="background.card"
+              borderColor="background.muted"
               _focus={{
-                borderColor: 'blue.500',
-                boxShadow: '0 0 0 1px var(--chakra-colors-blue-500)',
+                borderColor: 'gold.200',
+                boxShadow: '0 0 0 1px var(--chakra-colors-gold-200)',
               }}
             />
           </InputGroup>
 
           <Box>
-            <Text fontWeight="semibold" mb={3} fontSize="sm" color={useColorModeValue('gray.700', 'gray.300')}>
-              Filtrar por Rol:
+            <Text fontWeight="bold" mb={3} fontSize="sm" color="foreground.primary" textTransform="uppercase" letterSpacing="wide">
+              Filtrar por Rol
             </Text>
             <Wrap spacing={2}>
               {roles.map((role) => (
                 <WrapItem key={role}>
                   <Button
                     size="sm"
-                    variant={selectedRole === role ? 'solid' : 'outline'}
-                    colorScheme={selectedRole === role ? 'blue' : 'gray'}
+                    variant={selectedRole === role ? 'default' : 'outline'}
+                    colorScheme="gold"
                     onClick={() => {
                       setSelectedRole(role)
                       if (role === 'All') {
@@ -215,8 +227,8 @@ const ChampionList: React.FC = () => {
                       setSearchParams(searchParams)
                     }}
                     _hover={{
-                      transform: 'translateY(-2px)',
-                      boxShadow: 'md',
+                      transform: 'scale(1.05)',
+                      boxShadow: 'xl',
                     }}
                     transition="all 0.2s"
                   >
@@ -227,7 +239,7 @@ const ChampionList: React.FC = () => {
             </Wrap>
           </Box>
 
-          <Text fontSize="sm" color={useColorModeValue('gray.600', 'gray.400')}>
+          <Text fontSize="sm" color="foreground.muted">
             Mostrando {filteredChampions.length} de {champions.length} campeones
           </Text>
         </VStack>
@@ -248,8 +260,8 @@ const ChampionList: React.FC = () => {
             ))}
           </SimpleGrid>
         ) : (
-          <Box textAlign="center" py={12}>
-            <Text fontSize="xl" color={useColorModeValue('gray.600', 'gray.400')}>
+          <Box textAlign="center" py={12} bg="background.card" borderRadius="lg" boxShadow="md" border="1px" borderColor="background.muted">
+            <Text fontSize="lg" color="foreground.muted">
               No se encontraron campeones con los filtros seleccionados
             </Text>
           </Box>

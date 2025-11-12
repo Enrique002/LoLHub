@@ -166,6 +166,17 @@ const mapeoIdCampeon: Record<string, string> = {
   'Zilean': '0026',
   'Zoe': '0142',
   'Zyra': '0143',
+  // Campeones nuevos añadidos (2024-2025)
+  'Smolder': '0902',
+  'Hwei': '0910',
+  'Briar': '0903',
+  'Naafiri': '0901',
+  'Milio': '0902',
+  'Ksante': '0897',
+  'Belveth': '0895',
+  'Nilah': '0894',
+  'Renata': '0888',
+  'Akshan': '0166',
 };
 
 /**
@@ -191,15 +202,32 @@ const obtenerClaveHabilidad = (indice: number): string => {
  * Construye la URL del video de una habilidad
  * @param {string} idCampeon - ID del campeón (nombre)
  * @param {number} indiceHabilidad - Índice de la habilidad (0 = Pasiva, 1 = Q, 2 = W, 3 = E, 4 = R)
+ * @param {string|null} idNumericoOpcional - ID numérico opcional del campeón (si viene de la API)
  * @returns {string|null} URL del video o null si no se puede construir
  */
 export const construirUrlVideoHabilidad = (
   idCampeon: string,
-  indiceHabilidad: number
+  indiceHabilidad: number,
+  idNumericoOpcional?: string | null
 ): string | null => {
-  const idNumerico = obtenerIdNumericoCampeon(idCampeon);
+  // Intentar usar el ID numérico opcional primero si existe y es válido, luego el mapeo
+  let idNumerico: string | null = null;
+  
+  if (idNumericoOpcional && typeof idNumericoOpcional === 'string' && idNumericoOpcional.trim() !== '') {
+    // Si el ID opcional viene de la API, formatearlo a 4 dígitos con ceros a la izquierda
+    const idNum = parseInt(idNumericoOpcional, 10);
+    if (!isNaN(idNum) && idNum > 0) {
+      idNumerico = idNum.toString().padStart(4, '0');
+    }
+  }
+  
+  // Si no se obtuvo del parámetro opcional, usar el mapeo (comportamiento original)
+  if (!idNumerico) {
+    idNumerico = obtenerIdNumericoCampeon(idCampeon);
+  }
   
   if (!idNumerico) {
+    console.warn(`No se encontró ID numérico para el campeón: ${idCampeon}. El video no se mostrará.`);
     return null;
   }
   
