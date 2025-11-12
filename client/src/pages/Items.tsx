@@ -139,120 +139,8 @@ const Items: React.FC = () => {
       .trim()
   }
 
-  // Mapeo de estadísticas con emojis (solo los filtros solicitados)
-  const statConfig: Record<string, { 
-    label: string
-    emoji: string
-    suffix?: string
-    round?: boolean
-    statKeys: string[] // Claves de stats relacionadas
-  }> = {
-    'ad': { 
-      label: 'Daño de ataque (AD)', 
-      emoji: '⚔️',
-      statKeys: ['FlatPhysicalDamageMod']
-    },
-    'ap': { 
-      label: 'Poder de habilidad (AP)', 
-      emoji: '🔥',
-      statKeys: ['FlatMagicDamageMod']
-    },
-    'attack-speed': { 
-      label: 'Velocidad de ataque', 
-      emoji: '🗡️',
-      suffix: '%',
-      round: true,
-      statKeys: ['PercentAttackSpeedMod']
-    },
-    'lethality-armor-pen': { 
-      label: 'Letalidad / Penetración de armadura', 
-      emoji: '💥',
-      statKeys: ['Lethality', 'FlatArmorPenetrationMod', 'PercentArmorPenetrationMod']
-    },
-    'armor': { 
-      label: 'Armadura', 
-      emoji: '🛡️',
-      statKeys: ['FlatArmorMod']
-    },
-    'magic-resist': { 
-      label: 'Resistencia mágica', 
-      emoji: '🌀',
-      statKeys: ['FlatSpellBlockMod']
-    },
-    'health': { 
-      label: 'Vida', 
-      emoji: '❤️',
-      statKeys: ['FlatHPPoolMod']
-    },
-    'regen': { 
-      label: 'Regeneración (vida o maná)', 
-      emoji: '💧',
-      statKeys: ['FlatHPRegenMod', 'PercentHPRegenMod', 'FlatMPRegenMod', 'PercentMPRegenMod']
-    },
-    'lifesteal-omnivamp': { 
-      label: 'Robo de vida / Omnivampirismo', 
-      emoji: '🔁',
-      statKeys: ['PercentLifeStealMod', 'Omnivamp']
-    },
-    'heal-shield-power': { 
-      label: 'Curaciones y escudos potenciados', 
-      emoji: '💗',
-      statKeys: ['HealAndShieldPower']
-    },
-    'tenacity': { 
-      label: 'Tenacidad / Resistencia a control de masas / reducción de daño', 
-      emoji: '🛡️',
-      statKeys: ['Tenacity']
-    },
-    'ability-haste': { 
-      label: 'Aceleración de habilidad (Ability Haste / CDR)', 
-      emoji: '⏱️',
-      statKeys: ['AbilityHaste']
-    },
-    'movement-speed': { 
-      label: 'Velocidad de movimiento', 
-      emoji: '🌀',
-      statKeys: ['FlatMovementSpeedMod', 'PercentMovementSpeedMod']
-    },
-    'on-hit': { 
-      label: 'Daño por golpe (On-Hit / daño básico potenciado)', 
-      emoji: '🦷',
-      statKeys: [] // Se buscará en tags o descripción
-    },
-  }
-
-  // Función para verificar si un item tiene una estadística (priorizando stats directos)
-  const itemHasStat = (item: ItemData, filterKey: string): boolean => {
-    const config = statConfig[filterKey]
-    if (!config) return false
-    
-    // PRIMERO: Verificar en stats directos (prioridad máxima)
-    if (item.stats && config.statKeys.length > 0) {
-      for (const statKey of config.statKeys) {
-        if (item.stats[statKey] !== undefined && item.stats[statKey] !== 0) {
-          return true
-        }
-      }
-    }
-    
-    // Para On-Hit, buscar en tags
-    if (filterKey === 'on-hit') {
-      if (item.tags && item.tags.includes('OnHit')) {
-        return true
-      }
-      // También buscar en descripción como último recurso
-      const descLimpia = limpiarTextoParaBusqueda(item.description)
-      const plaintextLimpio = limpiarTextoParaBusqueda(item.plaintext)
-      const combinedText = `${descLimpia} ${plaintextLimpio}`
-      return combinedText.includes('on-hit') || combinedText.includes('golpe') || combinedText.includes('ataque básico')
-    }
-    
-    // SOLO como último recurso para otros stats: buscar en descripción (mínimo uso)
-    // Solo si no se encontró en stats directos
-    return false
-  }
-
-  // Mapeo de palabras clave en español para buscar en descripciones/pasivas (ya no se usa mucho)
+  // Mapeo de palabras clave en español para buscar en descripciones/pasivas
+  // Incluye múltiples variaciones y sin acentos para mayor cobertura
   const statKeywords: Record<string, string[]> = {
     FlatHPPoolMod: ['vida', 'salud', 'hp', 'puntos de vida', 'vitalidad', 'vidas', 'vida maxima', 'vida máxima'],
     FlatMPPoolMod: ['maná', 'mana', 'puntos de maná', 'manas', 'mana maxima', 'mana máxima'],
@@ -350,35 +238,33 @@ const Items: React.FC = () => {
     ],
   }
 
-  // Función para verificar si un item tiene una estadística (priorizando stats directos)
-  const itemHasStat = (item: ItemData, filterKey: string): boolean => {
-    const config = statConfig[filterKey]
-    if (!config) return false
-    
-    // PRIMERO: Verificar en stats directos (prioridad máxima)
-    if (item.stats && config.statKeys.length > 0) {
-      for (const statKey of config.statKeys) {
-        if (item.stats[statKey] !== undefined && item.stats[statKey] !== 0) {
-          return true
-        }
-      }
+  // Función para verificar si un item tiene una estadística (en stats o en descripción)
+  const itemHasStat = (item: ItemData, statKey: string): boolean => {
+    // Primero verificar en stats directos
+    if (item.stats && item.stats[statKey] !== undefined && item.stats[statKey] !== 0) {
+      return true
     }
+
+    // Luego buscar en la descripción/pasivas
+    const keywords = statKeywords[statKey]
+    if (!keywords) return false
+
+    // Limpiar y normalizar textos (sin incluir el nombre para evitar falsos positivos)
+    const descLimpia = limpiarTextoParaBusqueda(item.description)
+    const plaintextLimpio = limpiarTextoParaBusqueda(item.plaintext)
     
-    // Para On-Hit, buscar en tags
-    if (filterKey === 'on-hit') {
-      if (item.tags && item.tags.includes('OnHit')) {
-        return true
-      }
-      // También buscar en descripción como último recurso
-      const descLimpia = limpiarTextoParaBusqueda(item.description)
-      const plaintextLimpio = limpiarTextoParaBusqueda(item.plaintext)
-      const combinedText = `${descLimpia} ${plaintextLimpio}`
-      return combinedText.includes('on-hit') || combinedText.includes('golpe') || combinedText.includes('ataque básico')
-    }
+    // Combinar descripción y plaintext
+    const combinedText = `${descLimpia} ${plaintextLimpio}`
+
+    // Buscar cualquier palabra clave (priorizar palabras más específicas primero)
+    const keywordsOrdenadas = [...keywords].sort((a, b) => b.length - a.length)
     
-    // SOLO como último recurso para otros stats: buscar en descripción (mínimo uso)
-    // Solo si no se encontró en stats directos
-    return false
+    return keywordsOrdenadas.some(keyword => {
+      const keywordLimpio = keyword.toLowerCase().trim()
+      // Buscar la palabra clave como palabra completa (no como substring)
+      const regex = new RegExp(`\\b${keywordLimpio.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
+      return regex.test(combinedText) || combinedText.includes(keywordLimpio)
+    })
   }
 
   const filteredItems = useMemo(() => {
@@ -411,40 +297,144 @@ const Items: React.FC = () => {
     if (sortBy === 'price-desc') sorted.sort((a, b) => b.price - a.price)
     return sorted
   }, [items, searchText, activeRoles, selectedStats, sortBy, selectedMode])
-  
-  // Mapeo para formatear stats en el modal (usa las claves originales de la API)
-  const statConfigForDisplay: Record<string, { 
+
+  // Mapeo de estadísticas con emojis
+  const statConfig: Record<string, { 
     label: string
     emoji: string
     suffix?: string
     round?: boolean
   }> = {
-    FlatHPPoolMod: { label: 'Vida', emoji: '❤️' },
-    FlatMPPoolMod: { label: 'Maná', emoji: '💙' },
-    FlatPhysicalDamageMod: { label: 'Daño de Ataque (AD)', emoji: '⚔️' },
-    FlatMagicDamageMod: { label: 'Poder de Habilidad (AP)', emoji: '🔥' },
-    FlatArmorMod: { label: 'Armadura', emoji: '🛡️' },
-    FlatSpellBlockMod: { label: 'Resistencia Mágica', emoji: '🌀' },
-    FlatMovementSpeedMod: { label: 'Velocidad de Movimiento', emoji: '🌀' },
-    PercentMovementSpeedMod: { label: 'Velocidad de Movimiento', emoji: '🌀', suffix: '%', round: true },
-    PercentAttackSpeedMod: { label: 'Velocidad de Ataque', emoji: '🗡️', suffix: '%', round: true },
-    FlatCritChanceMod: { label: 'Probabilidad de Crítico', emoji: '💥', suffix: '%', round: true },
-    FlatCritDamageMod: { label: 'Daño Crítico', emoji: '💥', suffix: '%', round: true },
-    PercentLifeStealMod: { label: 'Robo de Vida', emoji: '🔁', suffix: '%', round: true },
-    FlatMagicPenetrationMod: { label: 'Penetración Mágica', emoji: '🌀' },
-    PercentMagicPenetrationMod: { label: 'Penetración Mágica', emoji: '🌀', suffix: '%', round: true },
-    FlatArmorPenetrationMod: { label: 'Penetración de Armadura', emoji: '💥' },
-    PercentArmorPenetrationMod: { label: 'Penetración de Armadura', emoji: '💥', suffix: '%', round: true },
-    AbilityHaste: { label: 'Aceleración de Habilidad (CDR)', emoji: '⏱️' },
-    HealAndShieldPower: { label: 'Curaciones y Escudos Potenciados', emoji: '💗', suffix: '%', round: true },
-    Lethality: { label: 'Letalidad', emoji: '💥' },
-    SpellVamp: { label: 'Vampirismo de Hechizos', emoji: '🔁', suffix: '%', round: true },
-    Omnivamp: { label: 'Cortacuras (Omnivampirismo)', emoji: '🔁', suffix: '%', round: true },
-    FlatHPRegenMod: { label: 'Regeneración de Vida', emoji: '💧' },
-    PercentHPRegenMod: { label: 'Regeneración de Vida', emoji: '💧', suffix: '%', round: true },
-    FlatMPRegenMod: { label: 'Regeneración de Maná', emoji: '💧' },
-    PercentMPRegenMod: { label: 'Regeneración de Maná', emoji: '💧', suffix: '%', round: true },
-    Tenacity: { label: 'Tenacidad', emoji: '🛡️', suffix: '%', round: true },
+    FlatHPPoolMod: { 
+      label: 'Vida', 
+      emoji: '❤️'
+    },
+    FlatMPPoolMod: { 
+      label: 'Maná', 
+      emoji: '💙'
+    },
+    FlatPhysicalDamageMod: { 
+      label: 'Daño de Ataque (AD)', 
+      emoji: '⚔️'
+    },
+    FlatMagicDamageMod: { 
+      label: 'Poder de Habilidad (AP)', 
+      emoji: '🔥'
+    },
+    FlatArmorMod: { 
+      label: 'Armadura', 
+      emoji: '🛡️'
+    },
+    FlatSpellBlockMod: { 
+      label: 'Resistencia Mágica', 
+      emoji: '🌀'
+    },
+    FlatMovementSpeedMod: { 
+      label: 'Velocidad de Movimiento', 
+      emoji: '🌀'
+    },
+    PercentMovementSpeedMod: {
+      label: 'Velocidad de Movimiento',
+      emoji: '🌀',
+      suffix: '%',
+      round: true
+    },
+    PercentAttackSpeedMod: { 
+      label: 'Velocidad de Ataque', 
+      emoji: '🗡️',
+      suffix: '%',
+      round: true
+    },
+    FlatCritChanceMod: { 
+      label: 'Probabilidad de Crítico', 
+      emoji: '💥',
+      suffix: '%',
+      round: true
+    },
+    FlatCritDamageMod: {
+      label: 'Daño Crítico',
+      emoji: '💥',
+      suffix: '%',
+      round: true
+    },
+    PercentLifeStealMod: { 
+      label: 'Robo de Vida', 
+      emoji: '🔁',
+      suffix: '%',
+      round: true
+    },
+    FlatMagicPenetrationMod: { 
+      label: 'Penetración Mágica', 
+      emoji: '🌀'
+    },
+    PercentMagicPenetrationMod: {
+      label: 'Penetración Mágica',
+      emoji: '🌀',
+      suffix: '%',
+      round: true
+    },
+    FlatArmorPenetrationMod: { 
+      label: 'Penetración de Armadura', 
+      emoji: '💥'
+    },
+    PercentArmorPenetrationMod: {
+      label: 'Penetración de Armadura',
+      emoji: '💥',
+      suffix: '%',
+      round: true
+    },
+    AbilityHaste: { 
+      label: 'Aceleración de Habilidad (CDR)', 
+      emoji: '⏱️'
+    },
+    HealAndShieldPower: { 
+      label: 'Curaciones y Escudos Potenciados', 
+      emoji: '💗',
+      suffix: '%',
+      round: true
+    },
+    Lethality: { 
+      label: 'Letalidad', 
+      emoji: '💥'
+    },
+    SpellVamp: {
+      label: 'Vampirismo de Hechizos',
+      emoji: '🔁',
+      suffix: '%',
+      round: true
+    },
+    Omnivamp: {
+      label: 'Cortacuras (Omnivampirismo)',
+      emoji: '🔁',
+      suffix: '%',
+      round: true
+    },
+    FlatHPRegenMod: {
+      label: 'Regeneración de Vida',
+      emoji: '💧'
+    },
+    PercentHPRegenMod: {
+      label: 'Regeneración de Vida',
+      emoji: '💧',
+      suffix: '%',
+      round: true
+    },
+    FlatMPRegenMod: {
+      label: 'Regeneración de Maná',
+      emoji: '💧'
+    },
+    PercentMPRegenMod: {
+      label: 'Regeneración de Maná',
+      emoji: '💧',
+      suffix: '%',
+      round: true
+    },
+    Tenacity: {
+      label: 'Tenacidad',
+      emoji: '🛡️',
+      suffix: '%',
+      round: true
+    },
   }
 
   const formatItemStats = (stats: Record<string, number> | undefined) => {
@@ -452,7 +442,7 @@ const Items: React.FC = () => {
     const lines: string[] = []
     for (const [key, value] of Object.entries(stats)) {
       if (!value) continue
-      const meta = statConfigForDisplay[key]
+      const meta = statConfig[key]
       if (!meta) continue
       const shown = meta.round ? Math.round(value * 100) / 1 : value
       const suffix = meta.suffix ?? ''
@@ -588,6 +578,11 @@ const Items: React.FC = () => {
         <CheckboxGroup value={selectedStats} onChange={(vals) => setSelectedStats(vals as string[])}>
           <SimpleGrid columns={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing={3}>
             {Object.entries(statConfig)
+              .filter(([key]) => {
+                // Solo mostrar estadísticas que realmente existen en los items (si ya se cargaron)
+                if (items.length === 0) return true
+                return items.some(item => item.stats && item.stats[key] !== undefined && item.stats[key] !== 0)
+              })
               .map(([key, config]) => (
                 <Checkbox
                   key={key}
