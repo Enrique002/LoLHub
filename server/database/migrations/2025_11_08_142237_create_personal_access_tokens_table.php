@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('tokens_acceso_personal', function (Blueprint $table) {
             $table->id();
-            // Mantener nombres estándar para compatibilidad con Sanctum
+            // Nombres en español según requisitos del proyecto
             $table->morphs('tokenable');
-            $table->text('nombre');
+            $table->string('nombre');
             $table->string('token', 64)->unique();
             $table->text('habilidades')->nullable();
             $table->timestamp('ultimo_uso_en')->nullable();

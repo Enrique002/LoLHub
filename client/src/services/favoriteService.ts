@@ -64,5 +64,12 @@ export const servicioFavoritos = {
 };
 
 // Exportar también con el nombre anterior para compatibilidad
-export const favoriteService = servicioFavoritos;
+export const favoriteService = {
+  ...servicioFavoritos,
+  // Alias en inglés para compatibilidad
+  checkFavorite: servicioFavoritos.verificarFavorito,
+  addFavorite: servicioFavoritos.agregarFavorito,
+  removeFavorite: servicioFavoritos.eliminarFavorito,
+  getFavorites: servicioFavoritos.obtenerFavoritos,
+};
 

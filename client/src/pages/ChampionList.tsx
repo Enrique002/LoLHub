@@ -21,33 +21,26 @@ import { Search, Star } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import { DATA_DRAGON_BASE } from '../config'
-import ChampionCard from '../components/ChampionCard'
+import ChampionCard, { DatosCampeonFavorito } from '../components/ChampionCard'
 import Loading from '../components/Loading'
 import { useAuth } from '../contexts/AuthContext'
 import { favoriteService } from '../services/favoriteService'
 
-interface Champion {
-  id: string
-  name: string
-  title: string
-  image: {
-    full: string
-  }
-  tags?: string[]
-}
+type Champion = DatosCampeonFavorito
 
 type RoleFilter = 'Fighter' | 'Tank' | 'Mage' | 'Assassin' | 'Marksman' | 'Support' | 'All'
 
 const ChampionList: React.FC = () => {
-  const { isAuthenticated } = useAuth()
+  const { estaAutenticado } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [champions, setChampions] = useState<Champion[]>([])
-  const [favoriteChampions, setFavoriteChampions] = useState<Champion[]>([])
+  const [campeonesFavoritos, setCampeonesFavoritos] = useState<Champion[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const roleFromUrl = searchParams.get('role') as RoleFilter | null
   const [selectedRole, setSelectedRole] = useState<RoleFilter>(roleFromUrl && ['Fighter', 'Tank', 'Mage', 'Assassin', 'Marksman', 'Support'].includes(roleFromUrl) ? roleFromUrl : 'All')
   const [loading, setLoading] = useState(true)
-  const [loadingFavorites, setLoadingFavorites] = useState(false)
+  const [cargandoFavoritos, setCargandoFavoritos] = useState(false)
+  const [favoritosInicializados, setFavoritosInicializados] = useState(false)
 
   // Sincronizar el rol de la URL con el estado
   useEffect(() => {
@@ -74,30 +67,59 @@ const ChampionList: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchFavorites()
+    if (estaAutenticado) {
+      obtenerFavoritos(true)
     } else {
-      setFavoriteChampions([])
+      setCampeonesFavoritos([])
+      setFavoritosInicializados(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated])
+  }, [estaAutenticado])
 
-  const fetchFavorites = async () => {
-    setLoadingFavorites(true)
+  /**
+   * Obtiene la lista de campeones favoritos del usuario
+   */
+  const obtenerFavoritos = async (mostrarIndicador = false) => {
+    if (mostrarIndicador) {
+      setCargandoFavoritos(true)
+    }
     try {
-      const favorites = await favoriteService.getFavorites()
-      setFavoriteChampions(favorites as Champion[])
+      const favoritos = await favoriteService.obtenerFavoritos()
+      setCampeonesFavoritos(favoritos as Champion[])
     } catch (error) {
-      console.error('Error fetching favorites:', error)
+      console.error('Error obteniendo favoritos:', error)
     } finally {
-      setLoadingFavorites(false)
+      if (mostrarIndicador) {
+        setCargandoFavoritos(false)
+      }
+      setFavoritosInicializados(true)
     }
   }
 
-  const handleFavoriteChange = () => {
-    fetchFavorites()
+  /**
+   * Maneja los cambios en los favoritos
+   */
+  const manejarCambioFavorito = (campeon: Champion, esFavorito: boolean) => {
+    setCampeonesFavoritos((prev) => {
+      if (esFavorito) {
+        if (prev.some((fav) => fav.id === campeon.id)) {
+          return prev
+        }
+        return [...prev, campeon]
+      }
+      return prev.filter((fav) => fav.id !== campeon.id)
+    })
+
+    // Sincronizar con el backend en segundo plano
+    obtenerFavoritos()
   }
 
+  const idsFavoritos = useMemo(() => new Set(campeonesFavoritos.map((fav) => fav.id)), [campeonesFavoritos])
+
+  /**
+   * Filtra los campeones según la búsqueda y el rol seleccionado
+   * Excluye los campeones que ya están en favoritos para evitar duplicados
+   */
   const filteredChampions = useMemo(() => {
     let filtered = champions
 
@@ -116,9 +138,13 @@ const ChampionList: React.FC = () => {
       )
     }
 
+    // Excluir campeones que ya están en favoritos (opcional, para que no aparezcan duplicados)
+    // Si quieres que aparezcan en ambas secciones, comenta estas líneas
+    filtered = filtered.filter((champion) => !idsFavoritos.has(champion.id))
+
     // Ordenar alfabéticamente
     return filtered.sort((a, b) => a.name.localeCompare(b.name))
-  }, [champions, searchTerm, selectedRole])
+  }, [champions, searchTerm, selectedRole, idsFavoritos])
 
   const roles: RoleFilter[] = ['All', 'Fighter', 'Tank', 'Mage', 'Assassin', 'Marksman', 'Support']
 
@@ -160,30 +186,68 @@ const ChampionList: React.FC = () => {
           </Text>
         </Box>
 
-        {/* Favorites Section */}
-        {isAuthenticated && favoriteChampions.length > 0 && (
-          <Box mb={8}>
-            <HStack spacing={2} mb={4}>
-              <Icon as={Star} color="gold.200" boxSize={5} fill="gold.200" />
+        {/* Sección de Campeones Favoritos */}
+        {estaAutenticado && (
+          <Box 
+            mb={8} 
+            p={6} 
+            bg="background.card" 
+            borderRadius="xl" 
+            boxShadow="lg" 
+            border="2px" 
+            borderColor={campeonesFavoritos.length > 0 ? "gold.200" : "background.muted"}
+            transition="all 0.3s"
+          >
+            <HStack spacing={3} mb={4} align="center">
+              <Icon as={Star} color="gold.200" boxSize={6} fill="gold.200" />
               <Heading size="lg" fontWeight="bold" color="foreground.primary">
-                Mis Favoritos
+                Campeones Favoritos
               </Heading>
+              {campeonesFavoritos.length > 0 && (
+                <Text fontSize="sm" color="foreground.muted" fontWeight="medium">
+                  ({campeonesFavoritos.length})
+                </Text>
+              )}
             </HStack>
-            <SimpleGrid columns={{ base: 2, sm: 3, md: 4, lg: 5, xl: 6 }} spacing={4} mb={6}>
-              {favoriteChampions.map((champion) => (
-                <ChampionCard
-                  key={champion.id}
-                  id={champion.id}
-                  name={champion.name}
-                  title={champion.title}
-                  image={champion.image}
-                  tags={champion.tags}
-                  onFavoriteChange={handleFavoriteChange}
-                />
-              ))}
-            </SimpleGrid>
-            <Divider borderColor="background.muted" />
+            
+            {!favoritosInicializados && cargandoFavoritos ? (
+              <Box textAlign="center" py={8}>
+                <Text color="foreground.muted">Cargando favoritos...</Text>
+              </Box>
+            ) : campeonesFavoritos.length > 0 ? (
+              <>
+                <SimpleGrid columns={{ base: 2, sm: 3, md: 4, lg: 5, xl: 6 }} spacing={4}>
+                  {campeonesFavoritos.map((champion) => (
+                    <ChampionCard
+                      key={champion.id}
+                      id={champion.id}
+                      name={champion.name}
+                      title={champion.title}
+                      image={champion.image}
+                      tags={champion.tags}
+                      esFavoritoInicial
+                      onFavoriteChange={manejarCambioFavorito}
+                    />
+                  ))}
+                </SimpleGrid>
+              </>
+            ) : (
+              <Box textAlign="center" py={8} bg="background.secondary" borderRadius="md" border="1px dashed" borderColor="background.muted">
+                <Icon as={Star} boxSize={8} color="foreground.muted" mb={3} />
+                <Text color="foreground.muted" fontSize="md" fontWeight="medium">
+                  Aún no tienes campeones favoritos
+                </Text>
+                <Text color="foreground.muted" fontSize="sm" mt={2}>
+                  Haz clic en la estrella de cualquier campeón para agregarlo a favoritos
+                </Text>
+              </Box>
+            )}
           </Box>
+        )}
+
+        {/* Separador visual */}
+        {estaAutenticado && campeonesFavoritos.length > 0 && (
+          <Divider borderColor="background.muted" borderWidth="2px" my={4} />
         )}
 
         {/* Search and Filters */}
@@ -255,7 +319,8 @@ const ChampionList: React.FC = () => {
                 title={champion.title}
                 image={champion.image}
                 tags={champion.tags}
-                onFavoriteChange={handleFavoriteChange}
+                esFavoritoInicial={idsFavoritos.has(champion.id)}
+                  onFavoriteChange={manejarCambioFavorito}
               />
             ))}
           </SimpleGrid>

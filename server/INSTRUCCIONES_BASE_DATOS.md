@@ -109,6 +109,15 @@ php artisan migrate:status
 - `favorite_champions` - Campeones favoritos
 - `cache` - Cache
 - `jobs` - Cola de trabajos
+- `friend_requests` - Solicitudes de amistad
+- `friend_messages` - Mensajes privados entre amigos
+
+## Nuevas tablas para funciones recientes
+
+Si ya creaste la base de datos anteriormente pero necesitas agregar las tablas más nuevas sin recrear todo, puedes ejecutarlas individualmente:
+
+- `database\create_friend_requests_table.sql`
+- `database\create_friend_messages_table.sql`
 
 ## Solución de Problemas
 

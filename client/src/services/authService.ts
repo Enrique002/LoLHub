@@ -14,6 +14,10 @@ export interface Usuario {
   email_verified_at?: string;
   created_at: string;
   updated_at: string;
+  avatar_url?: string | null;
+  banner_url?: string | null;
+  favorite_items?: string[];
+  favorite_runes?: string[];
 }
 
 export interface RespuestaAutenticacion {

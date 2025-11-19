@@ -180,5 +180,60 @@ CREATE TABLE IF NOT EXISTS `trabajos_fallidos` (
   UNIQUE KEY `trabajos_fallidos_uuid_unique` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Tabla de solicitudes de amistad
+CREATE TABLE IF NOT EXISTS `friend_requests` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `requester_id` bigint(20) unsigned NOT NULL,
+  `receiver_id` bigint(20) unsigned NOT NULL,
+  `status` enum('pending','accepted','rejected') NOT NULL DEFAULT 'pending',
+  `accepted_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `friend_requests_requester_id_receiver_id_unique` (`requester_id`,`receiver_id`),
+  KEY `friend_requests_receiver_id_foreign` (`receiver_id`),
+  CONSTRAINT `friend_requests_requester_id_foreign` FOREIGN KEY (`requester_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `friend_requests_receiver_id_foreign` FOREIGN KEY (`receiver_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla de mensajes entre amigos
+CREATE TABLE IF NOT EXISTS `friend_messages` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `sender_id` bigint(20) unsigned NOT NULL,
+  `receiver_id` bigint(20) unsigned NOT NULL,
+  `message` text NOT NULL,
+  `read_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `friend_messages_sender_receiver_index` (`sender_id`,`receiver_id`),
+  CONSTRAINT `friend_messages_sender_id_foreign` FOREIGN KEY (`sender_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `friend_messages_receiver_id_foreign` FOREIGN KEY (`receiver_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla de usuarios bloqueados
+CREATE TABLE IF NOT EXISTS `blocked_users` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `blocker_id` bigint(20) unsigned NOT NULL,
+  `blocked_id` bigint(20) unsigned NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `blocked_users_blocker_id_blocked_id_unique` (`blocker_id`,`blocked_id`),
+  KEY `blocked_users_blocked_id_foreign` (`blocked_id`),
+  CONSTRAINT `blocked_users_blocker_id_foreign` FOREIGN KEY (`blocker_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `blocked_users_blocked_id_foreign` FOREIGN KEY (`blocked_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla de sugerencias
+CREATE TABLE IF NOT EXISTS `suggestions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  `message` text NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SELECT 'Todas las tablas creadas exitosamente' AS mensaje;
 

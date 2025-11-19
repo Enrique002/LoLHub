@@ -17,15 +17,28 @@ import {
   Text,
   Avatar,
   Icon,
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  useDisclosure,
+  VStack,
 } from '@chakra-ui/react'
-import { Moon, Sun, ChevronDown, AtSign } from 'lucide-react'
+import { Moon, Sun, ChevronDown, AtSign, MessageSquare, Menu as MenuIcon } from 'lucide-react'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useState } from 'react'
+import SuggestionModal from './SuggestionModal'
 
 const Navbar: React.FC = () => {
   const { colorMode, toggleColorMode } = useColorMode()
   const location = useLocation()
-  const { user, isAuthenticated, logout } = useAuth()
+  const { usuario, estaAutenticado, cerrarSesion, cargando } = useAuth()
+  const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false)
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
   const navbarBackground = useColorModeValue('white', 'background.card')
   const textColor = useColorModeValue('gray.800', 'foreground.primary')
@@ -36,8 +49,8 @@ const Navbar: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path
 
-  const handleLogout = async () => {
-    await logout()
+  const manejarCerrarSesion = async () => {
+    await cerrarSesion()
   }
 
   return (
@@ -150,7 +163,30 @@ const Navbar: React.FC = () => {
           >
             Ranking
           </Link>
+          <Button
+            leftIcon={<Icon as={MessageSquare} />}
+            variant="ghost"
+            size="sm"
+            px={3}
+            py={2}
+            color={textColor}
+            _hover={{ color: hoverTextColor, bg: buttonHoverBg }}
+            onClick={() => setIsSuggestionModalOpen(true)}
+          >
+            Sugerencias
+          </Button>
         </HStack>
+
+        <IconButton
+          aria-label="Menú"
+          icon={<Icon as={MenuIcon} />}
+          variant="ghost"
+          color={textColor}
+          _hover={{ color: hoverTextColor, bg: buttonHoverBg }}
+          size="sm"
+          display={{ base: 'flex', md: 'none' }}
+          onClick={onOpen}
+        />
 
         <Spacer />
 
@@ -164,7 +200,7 @@ const Navbar: React.FC = () => {
             _hover={{ color: hoverTextColor, bg: buttonHoverBg }}
             size="sm"
           />
-          {isAuthenticated && user ? (
+          {cargando ? null : estaAutenticado && usuario ? (
             <Menu>
               <MenuButton
                 as={Button}
@@ -175,16 +211,19 @@ const Navbar: React.FC = () => {
                 _hover={{ color: hoverTextColor, bg: buttonHoverBg }}
               >
                 <HStack spacing={2}>
-                  <Avatar size="xs" name={user.name} />
-                  <Text display={{ base: 'none', md: 'block' }}>{user.name}</Text>
+                  <Avatar size="xs" name={usuario.name} src={usuario.avatar_url ?? undefined} />
+                  <Text display={{ base: 'none', md: 'block' }}>{usuario.name}</Text>
                 </HStack>
               </MenuButton>
               <MenuList>
                 <Box px={3} py={2}>
-                  <Text fontSize="sm" fontWeight="semibold">{user.name}</Text>
-                  <Text fontSize="xs" color="gray.500">{user.email}</Text>
+                  <Text fontSize="sm" fontWeight="semibold">{usuario.name}</Text>
+                  <Text fontSize="xs" color="gray.500">{usuario.email}</Text>
                 </Box>
-                <MenuItem onClick={handleLogout} color="red.500">
+                <MenuItem as={RouterLink} to="/perfil">
+                  Mi Perfil
+                </MenuItem>
+                <MenuItem onClick={manejarCerrarSesion} color="red.500">
                   Cerrar Sesión
                 </MenuItem>
               </MenuList>
@@ -217,6 +256,109 @@ const Navbar: React.FC = () => {
           )}
         </HStack>
       </Flex>
+
+      <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader>Menú</DrawerHeader>
+          <DrawerBody>
+            <VStack spacing={4} align="stretch">
+              <Link
+                as={RouterLink}
+                to="/"
+                onClick={onClose}
+                px={3}
+                py={2}
+                color={isActive('/') ? activeLinkColor : textColor}
+                fontWeight={isActive('/') ? 'semibold' : 'normal'}
+                _hover={{ color: hoverTextColor, textDecoration: 'none', bg: buttonHoverBg }}
+                borderRadius="md"
+              >
+                Inicio
+              </Link>
+              <Link
+                as={RouterLink}
+                to="/champions"
+                onClick={onClose}
+                px={3}
+                py={2}
+                color={isActive('/champions') ? activeLinkColor : textColor}
+                fontWeight={isActive('/champions') ? 'semibold' : 'normal'}
+                _hover={{ color: hoverTextColor, textDecoration: 'none', bg: buttonHoverBg }}
+                borderRadius="md"
+              >
+                Campeones
+              </Link>
+              <Link
+                as={RouterLink}
+                to="/items"
+                onClick={onClose}
+                px={3}
+                py={2}
+                color={isActive('/items') ? activeLinkColor : textColor}
+                fontWeight={isActive('/items') ? 'semibold' : 'normal'}
+                _hover={{ color: hoverTextColor, textDecoration: 'none', bg: buttonHoverBg }}
+                borderRadius="md"
+              >
+                Objetos
+              </Link>
+              <Link
+                as={RouterLink}
+                to="/runas"
+                onClick={onClose}
+                px={3}
+                py={2}
+                color={isActive('/runas') ? activeLinkColor : textColor}
+                fontWeight={isActive('/runas') ? 'semibold' : 'normal'}
+                _hover={{ color: hoverTextColor, textDecoration: 'none', bg: buttonHoverBg }}
+                borderRadius="md"
+              >
+                Runas
+              </Link>
+              <Link
+                as={RouterLink}
+                to="/comunidad"
+                onClick={onClose}
+                px={3}
+                py={2}
+                color={isActive('/comunidad') ? activeLinkColor : textColor}
+                fontWeight={isActive('/comunidad') ? 'semibold' : 'normal'}
+                _hover={{ color: hoverTextColor, textDecoration: 'none', bg: buttonHoverBg }}
+                borderRadius="md"
+              >
+                Comunidad
+              </Link>
+              <Link
+                as={RouterLink}
+                to="/ranking"
+                onClick={onClose}
+                px={3}
+                py={2}
+                color={isActive('/ranking') ? activeLinkColor : textColor}
+                fontWeight={isActive('/ranking') ? 'semibold' : 'normal'}
+                _hover={{ color: hoverTextColor, textDecoration: 'none', bg: buttonHoverBg }}
+                borderRadius="md"
+              >
+                Ranking
+              </Link>
+              <Button
+                leftIcon={<Icon as={MessageSquare} />}
+                variant="ghost"
+                justifyContent="flex-start"
+                onClick={() => {
+                  setIsSuggestionModalOpen(true);
+                  onClose();
+                }}
+              >
+                Sugerencias
+              </Button>
+            </VStack>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+
+      <SuggestionModal isOpen={isSuggestionModalOpen} onClose={() => setIsSuggestionModalOpen(false)} />
     </Box>
   )
 }

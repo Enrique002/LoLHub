@@ -17,7 +17,7 @@ import { DATA_DRAGON_BASE } from '../config'
 import { useAuth } from '../contexts/AuthContext'
 import { favoriteService } from '../services/favoriteService'
 
-interface ChampionCardProps {
+export interface DatosCampeonFavorito {
   id: string
   name: string
   title: string
@@ -25,12 +25,24 @@ interface ChampionCardProps {
     full: string
   }
   tags?: string[]
-  onFavoriteChange?: () => void
 }
 
-const ChampionCard: React.FC<ChampionCardProps> = ({ id, name, title, image, tags = [], onFavoriteChange }) => {
-  const { isAuthenticated } = useAuth()
-  const [isFavorite, setIsFavorite] = useState(false)
+interface ChampionCardProps extends DatosCampeonFavorito {
+  esFavoritoInicial?: boolean
+  onFavoriteChange?: (campeon: DatosCampeonFavorito, esFavorito: boolean) => void
+}
+
+const ChampionCard: React.FC<ChampionCardProps> = ({ 
+  id, 
+  name, 
+  title, 
+  image, 
+  tags = [], 
+  esFavoritoInicial = false, 
+  onFavoriteChange 
+}) => {
+  const { estaAutenticado } = useAuth()
+  const [isFavorite, setIsFavorite] = useState(esFavoritoInicial)
   const [isLoading, setIsLoading] = useState(false)
   const toast = useToast()
   const cardBg = useColorModeValue('white', 'background.card')
@@ -38,25 +50,18 @@ const ChampionCard: React.FC<ChampionCardProps> = ({ id, name, title, image, tag
   const borderColor = useColorModeValue('gray.200', 'background.muted')
 
   useEffect(() => {
-    if (isAuthenticated) {
-      checkFavorite()
-    }
-  }, [id, isAuthenticated])
+    setIsFavorite(esFavoritoInicial)
+  }, [esFavoritoInicial])
 
-  const checkFavorite = async () => {
-    try {
-      const favorite = await favoriteService.checkFavorite(id)
-      setIsFavorite(favorite)
-    } catch (error) {
-      // Silenciar error si no está autenticado
-    }
-  }
-
-  const handleFavoriteClick = async (e: React.MouseEvent) => {
+  /**
+   * Maneja el click en el botón de favoritos
+   * @param {React.MouseEvent} e - Evento del click
+   */
+  const manejarClickFavorito = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
 
-    if (!isAuthenticated) {
+    if (!estaAutenticado) {
       toast({
         title: 'Inicia sesión',
         description: 'Debes iniciar sesión para agregar favoritos',
@@ -70,7 +75,7 @@ const ChampionCard: React.FC<ChampionCardProps> = ({ id, name, title, image, tag
     setIsLoading(true)
     try {
       if (isFavorite) {
-        await favoriteService.removeFavorite(id)
+        await favoriteService.eliminarFavorito(id)
         setIsFavorite(false)
         toast({
           title: 'Eliminado de favoritos',
@@ -78,8 +83,9 @@ const ChampionCard: React.FC<ChampionCardProps> = ({ id, name, title, image, tag
           duration: 2000,
           isClosable: true,
         })
+        onFavoriteChange?.({ id, name, title, image, tags }, false)
       } else {
-        await favoriteService.addFavorite(id)
+        await favoriteService.agregarFavorito(id)
         setIsFavorite(true)
         toast({
           title: 'Agregado a favoritos',
@@ -87,8 +93,8 @@ const ChampionCard: React.FC<ChampionCardProps> = ({ id, name, title, image, tag
           duration: 2000,
           isClosable: true,
         })
+        onFavoriteChange?.({ id, name, title, image, tags }, true)
       }
-      onFavoriteChange?.()
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -132,13 +138,13 @@ const ChampionCard: React.FC<ChampionCardProps> = ({ id, name, title, image, tag
             transform: 'scale(1.1)',
           }}
         />
-        {isAuthenticated && (
+        {estaAutenticado && (
           <IconButton
             aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
             icon={<Icon as={Star} fill={isFavorite ? 'currentColor' : 'none'} />}
             position="absolute"
             top={2}
-            right={2}
+            left={2}
             size="sm"
             colorScheme={isFavorite ? 'gold' : 'gray'}
             bg={isFavorite ? 'gold.200' : 'blackAlpha.600'}
@@ -147,9 +153,10 @@ const ChampionCard: React.FC<ChampionCardProps> = ({ id, name, title, image, tag
               bg: isFavorite ? 'gold.100' : 'blackAlpha.800',
               transform: 'scale(1.1)',
             }}
-            onClick={handleFavoriteClick}
+            onClick={manejarClickFavorito}
             isLoading={isLoading}
             zIndex={10}
+            transition="all 0.2s"
           />
         )}
         <Box

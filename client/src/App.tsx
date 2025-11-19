@@ -12,6 +12,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Items from './pages/Items';
 import Runas from './pages/Runas';
+import Profile from './pages/Profile';
+import Community from './pages/Community';
 
 /**
  * Componente principal de la aplicación
@@ -30,6 +32,8 @@ const App: React.FC = () => {
           <Route path="/champions/:id" element={<ChampionDetail />} />
           <Route path="/items" element={<Items />} />
           <Route path="/runas" element={<Runas />} />
+          <Route path="/perfil" element={<Profile />} />
+          <Route path="/comunidad" element={<Community />} />
         </Routes>
       </Box>
       <Footer />

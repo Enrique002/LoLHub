@@ -20,6 +20,7 @@ interface TipoContextoAutenticacion {
   registrar: (datos: DatosRegistro) => Promise<void>;
   cerrarSesion: () => Promise<void>;
   estaAutenticado: boolean;
+  actualizarUsuario: (usuarioActualizado: Usuario) => void;
 }
 
 const ContextoAutenticacion = createContext<TipoContextoAutenticacion | undefined>(undefined);
@@ -171,6 +172,10 @@ export const ProveedorAutenticacion: React.FC<PropsProveedorAutenticacion> = ({ 
     registrar,
     cerrarSesion,
     estaAutenticado: !!usuario,
+    actualizarUsuario: (usuarioActualizado: Usuario) => {
+      servicioAutenticacion.establecerUsuario(usuarioActualizado);
+      setUsuario(usuarioActualizado);
+    },
   };
 
   return <ContextoAutenticacion.Provider value={valor}>{children}</ContextoAutenticacion.Provider>;
