@@ -16,8 +16,11 @@ import {
   Textarea,
   useToast,
   VStack,
+  Text,
 } from '@chakra-ui/react';
 import { suggestionService } from '../services/suggestionService';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface SuggestionModalProps {
   isOpen: boolean;
@@ -29,6 +32,8 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({ isOpen, onClose }) =>
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const { estaAutenticado } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,46 +79,72 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({ isOpen, onClose }) =>
     }
   };
 
+  const handleLoginRedirect = () => {
+    onClose();
+    navigate('/login');
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'lg' }} isCentered>
       <ModalOverlay />
       <ModalContent>
-        <form onSubmit={handleSubmit}>
-          <ModalHeader>Sugerencias</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4}>
-              <FormControl>
-                <FormLabel>Nombre (opcional)</FormLabel>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Tu nombre"
-                  maxLength={255}
-                />
-              </FormControl>
-              <FormControl isRequired>
-                <FormLabel>Sugerencia</FormLabel>
-                <Textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Escribe tus sugerencias para mejorar la página..."
-                  minH="200px"
-                  maxLength={5000}
-                  resize="vertical"
-                />
-              </FormControl>
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button colorScheme="yellow" type="submit" isLoading={loading}>
-              Enviar sugerencia
-            </Button>
-          </ModalFooter>
-        </form>
+        {estaAutenticado ? (
+          <form onSubmit={handleSubmit}>
+            <ModalHeader>Sugerencias</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <VStack spacing={4}>
+                <FormControl>
+                  <FormLabel>Nombre (opcional)</FormLabel>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Tu nombre"
+                    maxLength={255}
+                  />
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel>Sugerencia</FormLabel>
+                  <Textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Escribe tus sugerencias para mejorar la página..."
+                    minH="200px"
+                    maxLength={5000}
+                    resize="vertical"
+                  />
+                </FormControl>
+              </VStack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button colorScheme="yellow" type="submit" isLoading={loading}>
+                Enviar sugerencia
+              </Button>
+            </ModalFooter>
+          </form>
+        ) : (
+          <>
+            <ModalHeader>Inicia sesión para enviar sugerencias</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Text>
+                Las sugerencias solo están disponibles para usuarios registrados. Inicia sesión para compartir
+                tus ideas y ayudarnos a mejorar.
+              </Text>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onClose}>
+                Cerrar
+              </Button>
+              <Button colorScheme="yellow" onClick={handleLoginRedirect}>
+                Iniciar sesión
+              </Button>
+            </ModalFooter>
+          </>
+        )}
       </ModalContent>
     </Modal>
   );

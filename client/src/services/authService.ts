@@ -18,6 +18,14 @@ export interface Usuario {
   banner_url?: string | null;
   favorite_items?: string[];
   favorite_runes?: string[];
+  selected_decoration_key?: string | null;
+  selected_decoration?: {
+    key: string;
+    title: string;
+    description?: string | null;
+    icon: string;
+    color: string;
+  } | null;
 }
 
 export interface RespuestaAutenticacion {

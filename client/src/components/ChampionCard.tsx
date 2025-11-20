@@ -30,6 +30,7 @@ export interface DatosCampeonFavorito {
 interface ChampionCardProps extends DatosCampeonFavorito {
   esFavoritoInicial?: boolean
   onFavoriteChange?: (campeon: DatosCampeonFavorito, esFavorito: boolean) => void
+  variant?: 'default' | 'compact'
 }
 
 const ChampionCard: React.FC<ChampionCardProps> = ({ 
@@ -39,12 +40,14 @@ const ChampionCard: React.FC<ChampionCardProps> = ({
   image, 
   tags = [], 
   esFavoritoInicial = false, 
-  onFavoriteChange 
+  onFavoriteChange,
+  variant = 'default',
 }) => {
   const { estaAutenticado } = useAuth()
   const [isFavorite, setIsFavorite] = useState(esFavoritoInicial)
   const [isLoading, setIsLoading] = useState(false)
   const toast = useToast()
+  const isCompact = variant === 'compact'
   const cardBg = useColorModeValue('white', 'background.card')
   const hoverBg = useColorModeValue('gray.50', 'background.secondary')
   const borderColor = useColorModeValue('gray.200', 'background.muted')
@@ -115,23 +118,25 @@ const ChampionCard: React.FC<ChampionCardProps> = ({
       bg={cardBg}
       borderRadius="lg"
       overflow="hidden"
-      boxShadow="md"
+      boxShadow={isCompact ? 'sm' : 'md'}
       border="1px"
       borderColor={borderColor}
       transition="all 0.3s"
       _hover={{
-        transform: 'translateY(-8px) scale(1.02)',
-        boxShadow: '2xl',
+        transform: isCompact ? 'translateY(-4px) scale(1.01)' : 'translateY(-8px) scale(1.02)',
+        boxShadow: isCompact ? 'xl' : '2xl',
         borderColor: 'gold.200',
         bg: hoverBg,
       }}
       position="relative"
+      height="100%"
     >
       <Box position="relative" overflow="hidden">
         <Image
           src={`${DATA_DRAGON_BASE}/img/champion/${image.full}`}
           alt={name}
           width="100%"
+          height={isCompact ? '200px' : undefined}
           objectFit="cover"
           transition="transform 0.3s"
           _hover={{
@@ -166,20 +171,21 @@ const ChampionCard: React.FC<ChampionCardProps> = ({
           right={0}
           bgGradient="linear(to-t, blackAlpha.700, transparent)"
           p={3}
+          p={isCompact ? 2 : 3}
         >
           <Text fontSize="lg" fontWeight="bold" color="white">
             {name}
           </Text>
         </Box>
       </Box>
-      <VStack spacing={2} p={4} align="start">
-        <Text fontSize="sm" color={useColorModeValue('gray.600', 'foreground.muted')} noOfLines={1}>
+      <VStack spacing={2} p={isCompact ? 3 : 4} align="start">
+        <Text fontSize={isCompact ? 'xs' : 'sm'} color={useColorModeValue('gray.600', 'foreground.muted')} noOfLines={1}>
           {title}
         </Text>
         {tags.length > 0 && (
           <HStack spacing={1} flexWrap="wrap">
             {tags.slice(0, 2).map((tag) => (
-              <Badge key={tag} variant="gold" fontSize="xs">
+              <Badge key={tag} variant="gold" fontSize={isCompact ? '2xs' : 'xs'}>
                 {tag}
               </Badge>
             ))}

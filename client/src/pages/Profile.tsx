@@ -1,6 +1,6 @@
 'use strict';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -32,14 +32,17 @@ import {
   useToast,
   Avatar,
   VStack,
+  Progress,
+  HStack,
 } from '@chakra-ui/react';
-import { Camera, Star, ImageIcon, Search, Sparkles, Shield } from 'lucide-react';
+import { Camera, Star, ImageIcon, Search, Sparkles, Shield, Crown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { profileService } from '../services/profileService';
 import { favoriteService } from '../services/favoriteService';
 import ChampionCard, { DatosCampeonFavorito } from '../components/ChampionCard';
 import { DATA_DRAGON_BASE } from '../config';
+import { missionsService, MissionProgress, MissionSummary, MissionReward } from '../services/missionsService';
 
 interface ItemData {
   id: string;
@@ -59,6 +62,23 @@ interface RuneData {
 
 type ModalTipo = 'items' | 'runes';
 
+const hexToRgba = (hex: string, alpha = 1): string => {
+  const sanitized = hex.replace('#', '');
+  if (sanitized.length !== 6) {
+    return `rgba(250, 204, 21, ${alpha})`;
+  }
+  const bigint = parseInt(sanitized, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const buildDecorationGlow = (color: string) => ({
+  backgroundImage: `linear-gradient(135deg, ${color}, ${hexToRgba(color, 0.2)})`,
+  boxShadow: `0 15px 35px ${hexToRgba(color, 0.45)}`,
+});
+
 const Profile: React.FC = () => {
   const { usuario, estaAutenticado, actualizarUsuario, cargando } = useAuth();
   const navegar = useNavigate();
@@ -71,6 +91,9 @@ const Profile: React.FC = () => {
   const [runesDatos, setRunesDatos] = useState<Record<string, RuneData>>({});
   const [favoritosItems, setFavoritosItems] = useState<string[]>([]);
   const [favoritosRunas, setFavoritosRunas] = useState<string[]>([]);
+  const [misiones, setMisiones] = useState<MissionProgress[]>([]);
+  const [resumenMisiones, setResumenMisiones] = useState<MissionSummary | null>(null);
+  const [actualizandoDecoracion, setActualizandoDecoracion] = useState<string | 'remove' | null>(null);
 
   const [modalTipo, setModalTipo] = useState<ModalTipo>('items');
   const modalEdicion = useDisclosure();
@@ -79,6 +102,46 @@ const Profile: React.FC = () => {
 
   const inputAvatarRef = useRef<HTMLInputElement>(null);
   const inputBannerRef = useRef<HTMLInputElement>(null);
+  const decoracionActiva = perfil?.selected_decoration ?? null;
+
+  const recargarMisiones = useCallback(async () => {
+    try {
+      const respuesta = await missionsService.obtenerProgreso();
+      setMisiones(respuesta.missions);
+      setResumenMisiones(respuesta.summary);
+    } catch (error) {
+      console.error('No se pudieron cargar las misiones', error);
+    }
+  }, []);
+
+  const equiparDecoracion = useCallback(
+    async (missionKey: string | null) => {
+      setActualizandoDecoracion(missionKey ?? 'remove');
+      try {
+        const respuesta = await profileService.actualizarPerfil({
+          selected_decoration_key: missionKey,
+        });
+        setPerfil(respuesta.user);
+        actualizarUsuario(respuesta.user);
+        toast({
+          title: missionKey ? 'Decoración equipada' : 'Decoración removida',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: 'No se pudo actualizar la decoración',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      } finally {
+        setActualizandoDecoracion(null);
+      }
+    },
+    [actualizarUsuario, toast]
+  );
 
   useEffect(() => {
     if (cargando) {
@@ -102,6 +165,7 @@ const Profile: React.FC = () => {
         setFavoritosRunas(perfilResp.user.favorite_runes ?? []);
         setFavoritosCampeones(favoritosResp as DatosCampeonFavorito[]);
         actualizarUsuario(perfilResp.user);
+        await recargarMisiones();
       } catch (error) {
         toast({
           title: 'Error al cargar el perfil',
@@ -150,7 +214,7 @@ const Profile: React.FC = () => {
     cargarPerfil();
     cargarDatosEstaticos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [estaAutenticado, cargando]);
+  }, [estaAutenticado, cargando, recargarMisiones]);
 
   const manejarCargaArchivo = (tipo: 'avatar' | 'banner') => (evento: React.ChangeEvent<HTMLInputElement>) => {
     const archivo = evento.target.files?.[0];
@@ -170,6 +234,7 @@ const Profile: React.FC = () => {
           duration: 3000,
           isClosable: true,
         });
+        recargarMisiones();
       })
       .catch(() => {
         toast({
@@ -208,6 +273,7 @@ const Profile: React.FC = () => {
           duration: 3000,
           isClosable: true,
         });
+        recargarMisiones();
       })
       .catch(() => {
         toast({
@@ -337,6 +403,39 @@ const Profile: React.FC = () => {
     );
   };
 
+  const missionIconMap = useMemo(
+    () => ({
+      crown: Crown,
+      sparkles: Sparkles,
+      shield: Shield,
+      image: ImageIcon,
+    }),
+    []
+  );
+
+  const renderDecoracion = useCallback(
+    (decoracion: MissionReward) => {
+      const IconComponent = missionIconMap[decoracion.icon as keyof typeof missionIconMap] ?? Sparkles;
+      return (
+        <Tag
+          key={decoracion.key}
+          borderRadius="full"
+          px={4}
+          py={2}
+          bg="transparent"
+          borderColor={decoracion.color}
+          borderWidth="1px"
+        >
+          <Flex align="center" gap={2}>
+            <Icon as={IconComponent} color={decoracion.color} />
+            <Text fontWeight="semibold">{decoracion.title}</Text>
+          </Flex>
+        </Tag>
+      );
+    },
+    [missionIconMap]
+  );
+
   if (cargando || cargandoPerfil) {
     return (
       <Container maxW="1200px" py={8}>
@@ -411,24 +510,46 @@ const Profile: React.FC = () => {
               ref={inputBannerRef}
               onChange={manejarCargaArchivo('banner')}
             />
-            <Avatar
-              size="xl"
-              name={perfil?.name}
-              src={perfil?.avatar_url ?? undefined}
-              borderWidth="4px"
-              borderColor="background.card"
+            <Box
               position="absolute"
-              bottom="-48px"
+              bottom="-64px"
               left="32px"
-            />
-            <IconButton
-              aria-label="Cambiar avatar"
-              icon={<Camera />}
-              position="absolute"
-              bottom="16px"
-              left="140px"
-              onClick={() => inputAvatarRef.current?.click()}
-            />
+              display="flex"
+              flexDirection="column"
+              gap={2}
+              alignItems="flex-start"
+            >
+              <Box position="relative" display="inline-block">
+                <Box
+                  borderRadius="full"
+                  p={decoracionActiva ? 2 : 0}
+                  bg={decoracionActiva ? 'transparent' : 'background.card'}
+                  border={decoracionActiva ? '2px solid transparent' : '4px solid background.card'}
+                  sx={decoracionActiva ? buildDecorationGlow(decoracionActiva.color) : undefined}
+                >
+                  <Avatar
+                    size="xl"
+                    name={perfil?.name}
+                    src={perfil?.avatar_url ?? undefined}
+                    borderWidth={decoracionActiva ? 0 : 0}
+                  />
+                </Box>
+                <IconButton
+                  aria-label="Cambiar avatar"
+                  icon={<Camera />}
+                  size="sm"
+                  position="absolute"
+                  bottom={0}
+                  right={-2}
+                  onClick={() => inputAvatarRef.current?.click()}
+                />
+              </Box>
+              {decoracionActiva && (
+                <Tag variant="subtle" colorScheme="yellow">
+                  {decoracionActiva.title}
+                </Tag>
+              )}
+            </Box>
             <Input
               type="file"
               accept="image/*"
@@ -446,6 +567,122 @@ const Profile: React.FC = () => {
           </Box>
         </Box>
 
+        {resumenMisiones && (
+          <Box borderWidth="1px" borderRadius="2xl" p={6} borderColor="background.muted" bg="background.card" boxShadow="xl">
+            <Flex align="center" justify="space-between" mb={6} direction={{ base: 'column', md: 'row' }} gap={3}>
+              <Box>
+                <Heading size="md">Misiones y decoraciones</Heading>
+                <Text color="foreground.muted">Completa los retos para desbloquear adornos únicos.</Text>
+              </Box>
+              <Tag size="lg" colorScheme="yellow" borderRadius="full" px={4}>
+                {resumenMisiones.completed}/{resumenMisiones.total} completadas
+              </Tag>
+            </Flex>
+            <Stack spacing={4}>
+              {misiones.length ? (
+                misiones.map((mision) => {
+                  const IconComponent = missionIconMap[mision.reward.icon as keyof typeof missionIconMap] ?? Sparkles;
+                  return (
+                    <Box
+                      key={mision.key}
+                      borderWidth="1px"
+                      borderRadius="lg"
+                      p={4}
+                      borderColor={mision.completed ? 'gold.300' : 'background.muted'}
+                      bg={mision.completed ? 'yellow.900' : 'background.secondary'}
+                    >
+                      <Flex
+                        justify="space-between"
+                        align={{ base: 'flex-start', md: 'center' }}
+                        gap={3}
+                        direction={{ base: 'column', md: 'row' }}
+                        mb={3}
+                      >
+                        <Box>
+                          <Flex align="center" gap={3}>
+                            <Icon as={IconComponent} color={mision.completed ? 'gold.200' : 'foreground.primary'} />
+                            <Heading size="sm">{mision.title}</Heading>
+                          </Flex>
+                          <Text color="foreground.muted" fontSize="sm" mt={1}>
+                            {mision.description}
+                          </Text>
+                        </Box>
+                        <Tag colorScheme={mision.completed ? 'yellow' : 'gray'} borderRadius="full">
+                          {mision.completed ? 'Completada' : `${mision.progress.current}/${mision.progress.target}`}
+                        </Tag>
+                      </Flex>
+                      <Progress value={mision.progress.percentage} colorScheme="yellow" size="sm" borderRadius="full" />
+                      <HStack spacing={2} mt={3} color="foreground.muted" fontSize="sm">
+                        <Text>Recompensa:</Text>
+                        <Flex align="center" gap={2}>
+                          <Icon as={IconComponent} color={mision.reward.color} />
+                          <Text fontWeight="semibold" color="foreground.primary">
+                            {mision.reward.title}
+                          </Text>
+                        </Flex>
+                      </HStack>
+                    </Box>
+                  );
+                })
+              ) : (
+                <Text color="foreground.muted">Estamos calculando tus misiones...</Text>
+              )}
+            </Stack>
+            <Box mt={6}>
+              <Heading size="sm" mb={3}>
+                Decoraciones desbloqueadas
+              </Heading>
+              {resumenMisiones.decorations.length ? (
+                <Stack spacing={3}>
+                  {resumenMisiones.decorations.map((decoracion) => {
+                    const esActiva = decoracionActiva?.key === decoracion.key;
+                    return (
+                      <Flex
+                        key={decoracion.key}
+                        align={{ base: 'flex-start', md: 'center' }}
+                        justify="space-between"
+                        gap={3}
+                        direction={{ base: 'column', md: 'row' }}
+                        borderWidth="1px"
+                        borderRadius="lg"
+                        p={3}
+                        borderColor={esActiva ? decoracion.color : 'background.muted'}
+                        bg={esActiva ? hexToRgba(decoracion.color, 0.1) : 'transparent'}
+                      >
+                        {renderDecoracion(decoracion)}
+                        <Button
+                          size="sm"
+                          variant={esActiva ? 'solid' : 'outline'}
+                          colorScheme="yellow"
+                          onClick={() => equiparDecoracion(decoracion.key)}
+                          isDisabled={esActiva}
+                          isLoading={actualizandoDecoracion === decoracion.key}
+                        >
+                          {esActiva ? 'Equipado' : 'Equipar'}
+                        </Button>
+                      </Flex>
+                    );
+                  })}
+                  {decoracionActiva && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      colorScheme="whiteAlpha"
+                      alignSelf="flex-start"
+                      onClick={() => equiparDecoracion(null)}
+                      isLoading={actualizandoDecoracion === 'remove'}
+                    >
+                      Quitar decoración
+                    </Button>
+                  )}
+                </Stack>
+              ) : (
+                <Text color="foreground.muted">Completa una misión para conseguir tu primera decoración.</Text>
+              )}
+            </Box>
+          </Box>
+        )}
+
         <Box>
           <Flex align="center" justify="space-between" mb={4}>
             <Flex align="center" gap={2}>
@@ -457,12 +694,13 @@ const Profile: React.FC = () => {
             </Button>
           </Flex>
           {favoritosCampeones.length ? (
-            <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
+            <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4, xl: 5 }} spacing={4}>
               {favoritosCampeones.map((campeon) => (
                 <ChampionCard
                   key={campeon.id}
                   {...campeon}
                   esFavoritoInicial
+                  variant="compact"
                   onFavoriteChange={(_, esFavorito) => {
                     if (!esFavorito) {
                       setFavoritosCampeones((prev) => prev.filter((c) => c.id !== campeon.id));

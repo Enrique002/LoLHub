@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('blocked_users', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('blocker_id')->constrained('usuarios')->cascadeOnDelete();
-            $table->foreignId('blocked_id')->constrained('usuarios')->cascadeOnDelete();
-            $table->timestamps();
+        if (!Schema::hasTable('blocked_users')) {
+            Schema::create('blocked_users', function (Blueprint $table): void {
+                $table->id();
+                $table->foreignId('blocker_id')->constrained('usuarios')->cascadeOnDelete();
+                $table->foreignId('blocked_id')->constrained('usuarios')->cascadeOnDelete();
+                $table->timestamps();
 
-            $table->unique(['blocker_id', 'blocked_id']);
-        });
+                $table->unique(['blocker_id', 'blocked_id']);
+            });
+        }
     }
 
     /**

@@ -58,6 +58,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/community/block', [App\Http\Controllers\Api\BlockedUserController::class, 'store']);
         Route::delete('/community/block/{blockedUserId}', [App\Http\Controllers\Api\BlockedUserController::class, 'destroy']);
         Route::post('/suggestions', [App\Http\Controllers\Api\SuggestionController::class, 'store']);
+        Route::get('/missions/progress', [App\Http\Controllers\Api\MissionController::class, 'progress']);
+        Route::get('/missions/ranking', [App\Http\Controllers\Api\MissionController::class, 'ranking']);
         
         // Rutas de favoritos
         Route::get('/favorites', [App\Http\Controllers\Api\FavoriteChampionController::class, 'index']);

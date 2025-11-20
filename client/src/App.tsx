@@ -14,6 +14,7 @@ import Items from './pages/Items';
 import Runas from './pages/Runas';
 import Profile from './pages/Profile';
 import Community from './pages/Community';
+import Ranking from './pages/Ranking';
 
 /**
  * Componente principal de la aplicación
@@ -34,6 +35,7 @@ const App: React.FC = () => {
           <Route path="/runas" element={<Runas />} />
           <Route path="/perfil" element={<Profile />} />
           <Route path="/comunidad" element={<Community />} />
+          <Route path="/ranking" element={<Ranking />} />
         </Routes>
       </Box>
       <Footer />

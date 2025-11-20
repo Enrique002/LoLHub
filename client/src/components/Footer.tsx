@@ -13,7 +13,7 @@ import {
   Icon,
 } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router-dom'
-import { Twitter, Youtube, Github } from 'lucide-react'
+import { Twitter, Github, Instagram, MessageCircle } from 'lucide-react'
 
 const Footer: React.FC = () => {
   const textColor = useColorModeValue('gray.800', 'foreground.primary')
@@ -86,35 +86,60 @@ const Footer: React.FC = () => {
             <Heading size="sm" fontWeight="bold" color={textColor}>
               Síguenos
             </Heading>
-            <HStack spacing={4}>
+            <VStack align="start" spacing={3}>
               <Link
-                href="https://twitter.com"
+                href="https://x.com/enrique0o"
                 isExternal
                 color={mutedColor}
-                _hover={{ color: 'gold.200', transform: 'scale(1.1)' }}
-                transition="all 0.2s"
+                _hover={{ color: 'gold.200' }}
+                fontSize="sm"
+                display="flex"
+                alignItems="center"
+                gap={2}
               >
-                <Icon as={Twitter} boxSize={6} strokeWidth={2} />
+                <Icon as={Twitter} boxSize={5} />
+                @enrique0o
               </Link>
               <Link
-                href="https://youtube.com"
+                href="https://github.com/Enrique002"
                 isExternal
                 color={mutedColor}
-                _hover={{ color: 'gold.200', transform: 'scale(1.1)' }}
-                transition="all 0.2s"
+                _hover={{ color: 'gold.200' }}
+                fontSize="sm"
+                display="flex"
+                alignItems="center"
+                gap={2}
               >
-                <Icon as={Youtube} boxSize={6} strokeWidth={2} />
+                <Icon as={Github} boxSize={5} />
+                @Enrique002
               </Link>
               <Link
-                href="https://github.com"
+                href="https://www.instagram.com/2002_enrique/"
                 isExternal
                 color={mutedColor}
-                _hover={{ color: 'gold.200', transform: 'scale(1.1)' }}
-                transition="all 0.2s"
+                _hover={{ color: 'gold.200' }}
+                fontSize="sm"
+                display="flex"
+                alignItems="center"
+                gap={2}
               >
-                <Icon as={Github} boxSize={6} strokeWidth={2} />
+                <Icon as={Instagram} boxSize={5} />
+                @2002_enrique
               </Link>
-            </HStack>
+              <Link
+                href="https://www.tiktok.com/@riquirin"
+                isExternal
+                color={mutedColor}
+                _hover={{ color: 'gold.200' }}
+                fontSize="sm"
+                display="flex"
+                alignItems="center"
+                gap={2}
+              >
+                <Icon as={MessageCircle} boxSize={5} />
+                @riquirin
+              </Link>
+            </VStack>
           </VStack>
         </SimpleGrid>
 

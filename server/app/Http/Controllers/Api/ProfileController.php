@@ -3,11 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\MissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
+    public function __construct(
+        private readonly MissionService $missionService
+    ) {
+    }
     /**
      * Devuelve la información del perfil del usuario autenticado
      */
@@ -36,6 +41,7 @@ class ProfileController extends Controller
             'favorite_items.*' => 'string',
             'favorite_runes' => 'sometimes|array',
             'favorite_runes.*' => 'string',
+            'selected_decoration_key' => 'sometimes|nullable|string',
         ]);
 
         if (isset($validated['name'])) {
@@ -60,6 +66,26 @@ class ProfileController extends Controller
 
         if (isset($validated['favorite_runes'])) {
             $usuario->favorite_runes = $validated['favorite_runes'];
+        }
+
+        if (array_key_exists('selected_decoration_key', $validated)) {
+            $decorationKey = $validated['selected_decoration_key'];
+
+            if ($decorationKey === null) {
+                $usuario->selected_decoration_key = null;
+            } else {
+                $missions = $this->missionService->progressFor($usuario);
+                $mission = $missions->firstWhere('key', $decorationKey);
+
+                if (!$mission || !$mission['completed']) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Aún no has desbloqueado esta decoración.',
+                    ], 422);
+                }
+
+                $usuario->selected_decoration_key = $decorationKey;
+            }
         }
 
         $usuario->save();

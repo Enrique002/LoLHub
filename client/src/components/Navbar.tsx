@@ -6,7 +6,6 @@ import {
   Heading,
   Button,
   IconButton,
-  useColorMode,
   useColorModeValue,
   HStack,
   Spacer,
@@ -27,14 +26,13 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react'
-import { Moon, Sun, ChevronDown, AtSign, MessageSquare, Menu as MenuIcon } from 'lucide-react'
+import { ChevronDown, AtSign, MessageSquare, Menu as MenuIcon } from 'lucide-react'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useState } from 'react'
 import SuggestionModal from './SuggestionModal'
 
 const Navbar: React.FC = () => {
-  const { colorMode, toggleColorMode } = useColorMode()
   const location = useLocation()
   const { usuario, estaAutenticado, cerrarSesion, cargando } = useAuth()
   const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false)
@@ -163,18 +161,6 @@ const Navbar: React.FC = () => {
           >
             Ranking
           </Link>
-          <Button
-            leftIcon={<Icon as={MessageSquare} />}
-            variant="ghost"
-            size="sm"
-            px={3}
-            py={2}
-            color={textColor}
-            _hover={{ color: hoverTextColor, bg: buttonHoverBg }}
-            onClick={() => setIsSuggestionModalOpen(true)}
-          >
-            Sugerencias
-          </Button>
         </HStack>
 
         <IconButton
@@ -192,13 +178,13 @@ const Navbar: React.FC = () => {
 
         <HStack spacing={2}>
           <IconButton
-            aria-label="Toggle color mode"
-            onClick={toggleColorMode}
-            icon={<Icon as={colorMode === 'light' ? Moon : Sun} />}
+            aria-label="Enviar sugerencia"
+            icon={<Icon as={MessageSquare} />}
             variant="ghost"
             color={textColor}
             _hover={{ color: hoverTextColor, bg: buttonHoverBg }}
             size="sm"
+            onClick={() => setIsSuggestionModalOpen(true)}
           />
           {cargando ? null : estaAutenticado && usuario ? (
             <Menu>
@@ -249,6 +235,7 @@ const Navbar: React.FC = () => {
                 leftIcon={<Icon as={AtSign} />}
                 _hover={{ transform: 'scale(1.05)' }}
                 transition="all 0.2s"
+                display={{ base: 'none', md: 'flex' }}
               >
                 Registrarse
               </Button>
@@ -353,6 +340,38 @@ const Navbar: React.FC = () => {
               >
                 Sugerencias
               </Button>
+              {!cargando && !estaAutenticado && (
+                <VStack spacing={2} w="100%">
+                  <Button
+                    as={RouterLink}
+                    to="/login"
+                    variant="outline"
+                    onClick={onClose}
+                    w="100%"
+                  >
+                    Iniciar sesión
+                  </Button>
+                  <Button
+                    as={RouterLink}
+                    to="/register"
+                    colorScheme="yellow"
+                    onClick={onClose}
+                    w="100%"
+                  >
+                    Registrarse
+                  </Button>
+                </VStack>
+              )}
+              {!cargando && estaAutenticado && (
+                <VStack spacing={2} w="100%">
+                  <Button as={RouterLink} to="/perfil" onClick={onClose} w="100%">
+                    Mi Perfil
+                  </Button>
+                  <Button onClick={manejarCerrarSesion} colorScheme="red" variant="outline" w="100%">
+                    Cerrar sesión
+                  </Button>
+                </VStack>
+              )}
             </VStack>
           </DrawerBody>
         </DrawerContent>

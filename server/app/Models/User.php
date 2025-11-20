@@ -38,6 +38,7 @@ class User extends Authenticatable
         'banner_path',
         'favorite_items',
         'favorite_runes',
+        'selected_decoration_key',
     ];
 
     /**
@@ -50,6 +51,7 @@ class User extends Authenticatable
         'email',
         'avatar_url',
         'banner_url',
+        'selected_decoration',
     ];
 
     /**
@@ -245,5 +247,33 @@ class User extends Authenticatable
         $base = rtrim(config('app.url'), '/');
 
         return $base . $relative;
+    }
+
+    /**
+     * Información de la decoración seleccionada por el usuario
+     */
+    public function getSelectedDecorationAttribute(): ?array
+    {
+        $key = $this->selected_decoration_key;
+
+        if (!$key) {
+            return null;
+        }
+
+        $definition = config("missions.{$key}");
+
+        if (!$definition) {
+            return null;
+        }
+
+        $reward = $definition['reward'] ?? [];
+
+        return [
+            'key' => $key,
+            'title' => $reward['title'] ?? ($definition['title'] ?? 'Decoración'),
+            'description' => $reward['description'] ?? ($definition['description'] ?? null),
+            'icon' => $reward['icon'] ?? 'sparkles',
+            'color' => $reward['color'] ?? '#FACC15',
+        ];
     }
 }

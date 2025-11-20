@@ -79,59 +79,67 @@ const RegisterForm: React.FC = () => {
     }
   };
 
+  const labelColor = useColorModeValue('whiteAlpha.900', 'whiteAlpha.900');
+  const helperColor = useColorModeValue('whiteAlpha.700', 'whiteAlpha.600');
+  const inputBg = 'rgba(255,255,255,0.05)';
+
   return (
-    <Box
-      w={['full', 'md']}
-      p={[8, 10]}
-      mt={[20, '10vh']}
-      mx="auto"
-      border={['none', '1px']}
-      borderColor={useColorModeValue('gray.300', 'gray.700')}
-      borderRadius={10}
-      bg={useColorModeValue('white', 'gray.800')}
-    >
-      <VStack spacing={4} align="flex-start" w="full">
-        <VStack spacing={1} align={[ 'flex-start', 'center' ]} w="full">
-          <Heading color={useColorModeValue('gray.800', 'white')}>Crear cuenta</Heading>
-          <Text color={useColorModeValue('gray.600', 'gray.400')}>Regístrate para continuar</Text>
+    <Box w="full" color="white">
+      <VStack spacing={6} align="flex-start" w="full">
+        <VStack spacing={1} align="flex-start" w="full">
+          <Heading color="white">Crear cuenta</Heading>
+          <Text color={helperColor}>Regístrate para continuar</Text>
         </VStack>
 
-        <form onSubmit={manejarEnvio}>
+        <form onSubmit={manejarEnvio} style={{ width: '100%' }}>
           <VStack spacing={4} w="full">
             <FormControl isRequired>
-              <FormLabel>Nombre</FormLabel>
+              <FormLabel color={labelColor}>Nombre</FormLabel>
               <Input
-                rounded="md"
+                rounded="lg"
                 type="text"
                 value={nombre}
                 onChange={(evento) => setNombre(evento.target.value)}
+                bg={inputBg}
+                borderColor="whiteAlpha.300"
+                _hover={{ borderColor: 'gold.200' }}
+                _focus={{ borderColor: 'gold.200', boxShadow: '0 0 0 1px rgba(250,191,36,0.8)' }}
               />
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel>Email</FormLabel>
+              <FormLabel color={labelColor}>Email</FormLabel>
               <Input
-                rounded="md"
+                rounded="lg"
                 type="email"
                 value={email}
                 onChange={(evento) => setEmail(evento.target.value)}
+                bg={inputBg}
+                borderColor="whiteAlpha.300"
+                _hover={{ borderColor: 'gold.200' }}
+                _focus={{ borderColor: 'gold.200', boxShadow: '0 0 0 1px rgba(250,191,36,0.8)' }}
               />
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel>Contraseña</FormLabel>
+              <FormLabel color={labelColor}>Contraseña</FormLabel>
               <InputGroup>
                 <Input
-                  rounded="md"
+                  rounded="lg"
                   type={mostrarContrasenya ? 'text' : 'password'}
                   value={contrasenya}
                   onChange={(evento) => setContrasenya(evento.target.value)}
+                  bg={inputBg}
+                  borderColor="whiteAlpha.300"
+                  _hover={{ borderColor: 'gold.200' }}
+                  _focus={{ borderColor: 'gold.200', boxShadow: '0 0 0 1px rgba(250,191,36,0.8)' }}
                 />
                 <InputRightElement>
                   <IconButton
                     aria-label={mostrarContrasenya ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                     icon={<Icon as={mostrarContrasenya ? EyeOff : Eye} />}
                     variant="ghost"
+                    color="white"
                     onClick={() => setMostrarContrasenya(!mostrarContrasenya)}
                   />
                 </InputRightElement>
@@ -139,19 +147,24 @@ const RegisterForm: React.FC = () => {
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel>Confirmar contraseña</FormLabel>
+              <FormLabel color={labelColor}>Confirmar contraseña</FormLabel>
               <InputGroup>
                 <Input
-                  rounded="md"
+                  rounded="lg"
                   type={mostrarConfirmacion ? 'text' : 'password'}
                   value={confirmacionContrasenya}
                   onChange={(evento) => setConfirmacionContrasenya(evento.target.value)}
+                  bg={inputBg}
+                  borderColor="whiteAlpha.300"
+                  _hover={{ borderColor: 'gold.200' }}
+                  _focus={{ borderColor: 'gold.200', boxShadow: '0 0 0 1px rgba(250,191,36,0.8)' }}
                 />
                 <InputRightElement>
                   <IconButton
                     aria-label={mostrarConfirmacion ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                     icon={<Icon as={mostrarConfirmacion ? EyeOff : Eye} />}
                     variant="ghost"
+                    color="white"
                     onClick={() => setMostrarConfirmacion(!mostrarConfirmacion)}
                   />
                 </InputRightElement>
@@ -159,8 +172,8 @@ const RegisterForm: React.FC = () => {
             </FormControl>
 
             <Button 
-              rounded="md" 
-              colorScheme="blue" 
+              rounded="lg" 
+              colorScheme="yellow" 
               w="full" 
               type="submit"
               isLoading={estaCargando}

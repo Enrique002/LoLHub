@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('friend_messages', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('sender_id')->constrained('usuarios')->cascadeOnDelete();
-            $table->foreignId('receiver_id')->constrained('usuarios')->cascadeOnDelete();
-            $table->text('message');
-            $table->timestamp('read_at')->nullable();
-            $table->timestamps();
+        if (!Schema::hasTable('friend_messages')) {
+            Schema::create('friend_messages', function (Blueprint $table): void {
+                $table->id();
+                $table->foreignId('sender_id')->constrained('usuarios')->cascadeOnDelete();
+                $table->foreignId('receiver_id')->constrained('usuarios')->cascadeOnDelete();
+                $table->text('message');
+                $table->timestamp('read_at')->nullable();
+                $table->timestamps();
 
-            $table->index(['sender_id', 'receiver_id']);
-        });
+                $table->index(['sender_id', 'receiver_id']);
+            });
+        }
     }
 
     /**

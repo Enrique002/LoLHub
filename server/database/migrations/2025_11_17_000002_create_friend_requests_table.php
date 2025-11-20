@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('friend_requests', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('requester_id')->constrained('usuarios')->cascadeOnDelete();
-            $table->foreignId('receiver_id')->constrained('usuarios')->cascadeOnDelete();
-            $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
-            $table->timestamp('accepted_at')->nullable();
-            $table->timestamps();
+        if (!Schema::hasTable('friend_requests')) {
+            Schema::create('friend_requests', function (Blueprint $table): void {
+                $table->id();
+                $table->foreignId('requester_id')->constrained('usuarios')->cascadeOnDelete();
+                $table->foreignId('receiver_id')->constrained('usuarios')->cascadeOnDelete();
+                $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
+                $table->timestamp('accepted_at')->nullable();
+                $table->timestamps();
 
-            $table->unique(['requester_id', 'receiver_id']);
-        });
+                $table->unique(['requester_id', 'receiver_id']);
+            });
+        }
     }
 
     /**
