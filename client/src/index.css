@@ -1,0 +1,93 @@
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Smooth transitions for theme changes */
+.chakra-ui-light {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.chakra-ui-dark {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Glow Effects - Gold */
+.glow-gold {
+  text-shadow: 0 0 10px rgba(240, 180, 41, 0.5),
+               0 0 20px rgba(240, 180, 41, 0.3),
+               0 0 30px rgba(240, 180, 41, 0.2);
+}
+
+.glow-gold-strong {
+  text-shadow: 0 0 15px rgba(240, 180, 41, 0.8),
+               0 0 30px rgba(240, 180, 41, 0.6),
+               0 0 45px rgba(240, 180, 41, 0.4);
+}
+
+/* Glow Effects - Blue Magic */
+.glow-blue {
+  text-shadow: 0 0 10px rgba(54, 197, 240, 0.5),
+               0 0 20px rgba(54, 197, 240, 0.3),
+               0 0 30px rgba(54, 197, 240, 0.2);
+}
+
+.glow-blue-strong {
+  text-shadow: 0 0 15px rgba(54, 197, 240, 0.8),
+               0 0 30px rgba(54, 197, 240, 0.6),
+               0 0 45px rgba(54, 197, 240, 0.4);
+}
+
+/* Shadow Glow Effects */
+.shadow-glow-gold {
+  box-shadow: 0 0 20px rgba(240, 180, 41, 0.4),
+              0 0 40px rgba(240, 180, 41, 0.2);
+}
+
+.shadow-glow-blue {
+  box-shadow: 0 0 20px rgba(54, 197, 240, 0.4),
+              0 0 40px rgba(54, 197, 240, 0.2);
+}
+
+/* Text Gradients */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #F0B429 0%, #F5CF6B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-magic {
+  background: linear-gradient(135deg, #36C5F0 0%, #80D7F4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Background Gradients */
+.bg-gradient-epic {
+  background: linear-gradient(135deg, rgba(240, 180, 41, 0.1) 0%, rgba(54, 197, 240, 0.1) 100%);
+}
+
+.bg-gradient-gold {
+  background: linear-gradient(135deg, #F0B429 0%, #F5CF6B 50%, #CC9300 100%);
+}
