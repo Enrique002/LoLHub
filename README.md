@@ -1,4 +1,4 @@
-# LoLHub - League of Legends Champions Guide
+# LoLHub - League of Legends 
 
 Aplicación web para explorar información detallada sobre los campeones de League of Legends, incluyendo sus habilidades, builds recomendadas y más.
 
