@@ -1,16 +1,54 @@
 erDiagram
-    USUARIOS {
+    usuarios ||--o{ sesiones : "tiene"
+    usuarios ||--o{ builds : "crea"
+    usuarios ||--o{ campeones_favoritos : "tiene"
+    usuarios ||--o{ equipos_ideales : "crea"
+    usuarios ||--o{ comentarios_equipos : "escribe"
+    usuarios ||--o{ solicitudes_amistad : "envia_solicitud"
+    usuarios ||--o{ solicitudes_amistad : "recibe_solicitud"
+    usuarios ||--o{ blocked_users : "bloquea"
+    usuarios ||--o{ blocked_users : "es_bloqueado"
+    usuarios ||--o{ mensajes_amistad : "envia_mensaje"
+    usuarios ||--o{ mensajes_amistad : "recibe_mensaje"
+    usuarios ||--o{ tokens_acceso_personal : "tiene"
+    
+    equipos_ideales ||--o{ comentarios_equipos : "tiene"
+    
+    campeones ||--o{ builds : "referenciado_en"
+    campeones ||--o{ campeones_favoritos : "es_favorito"
+    
+    usuarios {
         bigint id PK
         string nombre
         string correo UK
         timestamp correo_verificado_en
         string contrasenya
         string remember_token
+        string avatar_path
+        string banner_path
+        json favorite_items
+        json favorite_runes
+        string selected_decoration_key
         timestamp created_at
         timestamp updated_at
     }
-
-    CAMPEONES {
+    
+    tokens_reseteo_contrasenya {
+        string correo PK
+        string token
+        timestamp creado_en
+    }
+    
+    sesiones {
+        string id PK
+        bigint id_usuario FK
+        string direccion_ip
+        text agente_usuario
+        longtext datos
+        integer ultima_actividad
+    }
+    
+    campeones {
         bigint id PK
         string id_campeon UK
         string nombre
@@ -24,8 +62,8 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-
-    OBJETOS {
+    
+    objetos {
         bigint id PK
         string id_objeto UK
         string nombre
@@ -33,17 +71,17 @@ erDiagram
         text texto_plano
         json etiquetas
         json estadisticas
-        int oro_total
-        int oro_base
-        int oro_venta
+        integer oro_total
+        integer oro_base
+        integer oro_venta
         boolean comprable
         json mapas
         string url_imagen
         timestamp created_at
         timestamp updated_at
     }
-
-    BUILDS {
+    
+    builds {
         bigint id PK
         bigint id_usuario FK
         string id_campeon
@@ -54,16 +92,73 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-
-    CAMPEONES_FAVORITOS {
+    
+    campeones_favoritos {
         bigint id PK
         bigint id_usuario FK
         string id_campeon
         timestamp created_at
         timestamp updated_at
     }
-
-    TOKENS_ACCESO_PERSONAL {
+    
+    equipos_ideales {
+        bigint id PK
+        bigint id_usuario FK
+        string nombre
+        json campeones
+        json objetos
+        json runas
+        text descripcion
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    comentarios_equipos {
+        bigint id PK
+        bigint id_equipo FK
+        bigint id_usuario FK
+        text comentario
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    solicitudes_amistad {
+        bigint id PK
+        bigint requester_id FK
+        bigint receiver_id FK
+        enum status
+        timestamp accepted_at
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    blocked_users {
+        bigint id PK
+        bigint blocker_id FK
+        bigint blocked_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    mensajes_amistad {
+        bigint id PK
+        bigint sender_id FK
+        bigint receiver_id FK
+        text message
+        timestamp read_at
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    suggestions {
+        bigint id PK
+        string name
+        text message
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    tokens_acceso_personal {
         bigint id PK
         string tokenable_type
         bigint tokenable_id
@@ -75,70 +170,3 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-
-    SESIONES {
-        string id PK
-        bigint id_usuario FK
-        string direccion_ip
-        text agente_usuario
-        longtext datos
-        int ultima_actividad
-    }
-
-    TOKENS_RESETEO_CONTRASENYA {
-        string correo PK
-        string token
-        timestamp creado_en
-    }
-
-    CACHE {
-        string clave PK
-        mediumtext valor
-        int expiracion
-    }
-
-    BLOQUEOS_CACHE {
-        string clave PK
-        string propietario
-        int expiracion
-    }
-
-    TRABAJOS {
-        bigint id PK
-        string cola
-        longtext datos
-        tinyint intentos
-        int reservado_en
-        int disponible_en
-        int creado_en
-    }
-
-    LOTES_TRABAJOS {
-        string id PK
-        string nombre
-        int total_trabajos
-        int trabajos_pendientes
-        int trabajos_fallidos
-        longtext ids_trabajos_fallidos
-        mediumtext opciones
-        int cancelado_en
-        int creado_en
-        int finalizado_en
-    }
-
-    TRABAJOS_FALLIDOS {
-        bigint id PK
-        string uuid UK
-        text conexion
-        text cola
-        longtext datos
-        longtext excepcion
-        timestamp fallido_en
-    }
-
-    %% Relaciones
-    USUARIOS ||--o{ BUILDS : "tiene"
-    USUARIOS ||--o{ CAMPEONES_FAVORITOS : "tiene"
-    USUARIOS ||--o{ SESIONES : "tiene"
-    USUARIOS ||--o{ TOKENS_ACCESO_PERSONAL : "tiene (polymorphic)"
-
