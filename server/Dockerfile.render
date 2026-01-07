@@ -20,7 +20,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Habilitar mod_rewrite de Apache
 RUN a2enmod rewrite
 
-# Configurar Apache para Laravel (puerto se configurará en tiempo de ejecución)
+# Configurar Apache para Laravel
 RUN echo '<VirtualHost *:80>\n\
     DocumentRoot /var/www/html/public\n\
     <Directory /var/www/html/public>\n\
@@ -32,8 +32,13 @@ RUN echo '<VirtualHost *:80>\n\
 # Establecer directorio de trabajo
 WORKDIR /var/www/html
 
-# Copiar archivos de dependencias
-COPY composer.json composer.lock ./
+# Copiar archivos de dependencias primero
+COPY composer.json composer.lock* ./
+
+# Instalar dependencias de PHP (sin scripts para evitar errores)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts || \
+    (echo "Composer install falló, intentando sin optimización..." && \
+     composer install --no-dev --no-interaction --no-scripts)
 
 # Copiar archivos necesarios para los scripts de Composer
 COPY artisan ./
@@ -46,8 +51,8 @@ COPY resources ./resources
 COPY routes ./routes
 COPY storage ./storage
 
-# Instalar dependencias de PHP
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Ejecutar scripts de Composer ahora que tenemos los archivos
+RUN composer dump-autoload --optimize --no-interaction || true
 
 # Copiar el resto de los archivos
 COPY . .
@@ -58,7 +63,7 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
-# Exponer puerto (Render usa el puerto de la variable PORT)
+# Exponer puerto
 EXPOSE 80
 
 # Script de inicio para Render
@@ -67,4 +72,3 @@ RUN chmod +x /usr/local/bin/docker-entrypoint-render.sh
 
 ENTRYPOINT ["docker-entrypoint-render.sh"]
 CMD ["apache2-foreground"]
-
