@@ -20,7 +20,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Habilitar mod_rewrite de Apache
 RUN a2enmod rewrite
 
-# Configurar Apache para Laravel
+# Configurar Apache para Laravel (puerto se configurará en tiempo de ejecución)
 RUN echo '<VirtualHost *:80>\n\
     DocumentRoot /var/www/html/public\n\
     <Directory /var/www/html/public>\n\
@@ -59,7 +59,7 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
 # Exponer puerto (Render usa el puerto de la variable PORT)
-EXPOSE 10000
+EXPOSE 80
 
 # Script de inicio para Render
 COPY docker-entrypoint-render.sh /usr/local/bin/
