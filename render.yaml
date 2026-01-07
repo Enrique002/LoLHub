@@ -56,4 +56,3 @@ services:
     envVars:
       - key: VITE_API_BASE_URL
         sync: false
-    staticPublishPath: /usr/share/nginx/html
