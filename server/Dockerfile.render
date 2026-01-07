@@ -27,25 +27,25 @@ RUN echo '<VirtualHost *:80>\n\
 
 WORKDIR /var/www/html
 
-COPY composer.json composer.lock* ./
+COPY server/composer.json server/composer.lock* ./
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts || \
     (echo "Composer install falló, intentando sin optimización..." && \
      composer install --no-dev --no-interaction --no-scripts)
 
-COPY artisan ./
-COPY app ./app
-COPY bootstrap ./bootstrap
-COPY config ./config
-COPY database ./database
-COPY public ./public
-COPY resources ./resources
-COPY routes ./routes
-COPY storage ./storage
+COPY server/artisan ./
+COPY server/app ./app
+COPY server/bootstrap ./bootstrap
+COPY server/config ./config
+COPY server/database ./database
+COPY server/public ./public
+COPY server/resources ./resources
+COPY server/routes ./routes
+COPY server/storage ./storage
 
 RUN composer dump-autoload --optimize --no-interaction || true
 
-COPY . .
+COPY server/. .
 
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
@@ -54,9 +54,8 @@ RUN chown -R www-data:www-data /var/www/html \
 
 EXPOSE 80
 
-COPY docker-entrypoint-render.sh /usr/local/bin/
+COPY server/docker-entrypoint-render.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint-render.sh
 
 ENTRYPOINT ["docker-entrypoint-render.sh"]
 CMD ["apache2-foreground"]
-
