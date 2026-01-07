@@ -1,11 +1,11 @@
-services:
+databases:
   # Base de datos PostgreSQL
-  - type: pg
-    name: lolhub-database
-    plan: free
+  - name: lolhub-database
     databaseName: lolhub
     user: lolhub_user
+    plan: free
 
+services:
   # Backend Laravel
   - type: web
     name: lolhub-backend
@@ -56,5 +56,4 @@ services:
     envVars:
       - key: VITE_API_BASE_URL
         sync: false
-    staticPublishPath: /usr/share/nginx/html
 
