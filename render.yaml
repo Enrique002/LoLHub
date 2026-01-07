@@ -1,0 +1,60 @@
+services:
+  # Base de datos PostgreSQL
+  - type: pspg
+    name: lolhub-database
+    plan: free
+    databaseName: lolhub
+    user: lolhub_user
+
+  # Backend Laravel
+  - type: web
+    name: lolhub-backend
+    env: docker
+    plan: free
+    dockerfilePath: ./server/Dockerfile.render
+    dockerContext: ./server
+    envVars:
+      - key: APP_NAME
+        value: LoLHub
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: lolhub-database
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: lolhub-database
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: lolhub-database
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: lolhub-database
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: lolhub-database
+          property: password
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+    healthCheckPath: /api/v1
+
+  # Frontend React
+  - type: web
+    name: lolhub-frontend
+    env: docker
+    plan: free
+    dockerfilePath: ./client/Dockerfile.render
+    dockerContext: ./client
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+    staticPublishPath: /usr/share/nginx/html
+
