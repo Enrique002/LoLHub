@@ -1,6 +1,6 @@
 services:
   # Base de datos PostgreSQL
-  - type: pspg
+  - type: pg
     name: lolhub-database
     plan: free
     databaseName: lolhub
