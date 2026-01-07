@@ -11,8 +11,8 @@ services:
     name: lolhub-backend
     env: docker
     plan: free
-    dockerfilePath: Dockerfile.render
-    dockerContext: ./server
+    dockerfilePath: ./server/Dockerfile.render
+    dockerContext: .
     envVars:
       - key: APP_NAME
         value: LoLHub
