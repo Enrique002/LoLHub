@@ -130,14 +130,27 @@ export const ProveedorAutenticacion: React.FC<PropsProveedorAutenticacion> = ({ 
       
       navegar('/');
     } catch (error: any) {
-      const mensajeError = error.response?.data?.message || 'Error al registrar';
-      const errores = error.response?.data?.errors;
+      console.error('Error en registro:', error);
+      
+      let mensajeError = 'Error al registrar';
+      if (error.response?.data?.message) {
+        mensajeError = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        const errores = error.response.data.errors;
+        mensajeError = Object.values(errores).flat().join(', ');
+      } else if (error.message) {
+        mensajeError = error.message;
+      } else if (error.code === 'ECONNABORTED') {
+        mensajeError = 'La petición tardó demasiado. El servidor puede estar dormido. Intenta de nuevo.';
+      } else if (!error.response) {
+        mensajeError = 'No se pudo conectar con el servidor. Verifica que el backend esté funcionando.';
+      }
       
       toast({
         title: 'Error al registrar',
-        description: errores ? Object.values(errores).flat().join(', ') : mensajeError,
+        description: mensajeError,
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
       throw error;
