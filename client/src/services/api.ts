@@ -49,7 +49,9 @@ api.interceptors.response.use(
       console.error('No response from server:', error.message);
       return Promise.reject({
         ...error,
-        message: 'No se pudo conectar con el servidor. Verifica tu conexión o intenta más tarde.',
+        message: error.code === 'ECONNABORTED' 
+          ? 'La petición tardó demasiado. El servidor puede estar dormido. Intenta de nuevo.'
+          : 'No se pudo conectar con el servidor. Verifica tu conexión o intenta más tarde.',
       });
     }
     
