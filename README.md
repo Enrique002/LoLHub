@@ -26,6 +26,8 @@ Aplicación web para explorar información detallada sobre los campeones de Leag
 ## Instalación
 
 ```bash
+# Modificar el nombvre
+Una vez extraido el .zip, renombrar la carpeta "LoLHub-main" a "LoLHub"
 # Instalar dependencias
 cd client
 npm install
